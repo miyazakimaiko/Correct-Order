@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!--
+Template Name: Materialize - Material Design Admin Template
+Author: PixInvent
+Website: http://www.pixinvent.com/
+Contact: hello@pixinvent.com
+Follow: www.twitter.com/pixinvents
+Like: www.facebook.com/pixinvents
+Purchase: https://themeforest.net/item/materialize-material-design-admin-template/11446068?ref=pixinvent
+Renew Support: https://themeforest.net/item/materialize-material-design-admin-template/11446068?ref=pixinvent
+License: You must have a valid license purchased only from themeforest(the above link) in order to legally use the theme for your project.
+
+-->
+<html class="loading" lang="en" data-textdirection="ltr">
+  <!-- BEGIN: Head-->
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+    <meta name="description" content="Materialize is a Material Design Admin Template,It's modern, responsive and based on Material Design by Google.">
+    <meta name="keywords" content="materialize, admin template, dashboard template, flat admin template, responsive admin template, eCommerce dashboard, analytic dashboard">
+    <meta name="author" content="ThemeSelect">
+      {% if title %}
+    <title>Coffeeangel | {{ title }}</title>
+      {% else %}
+    <title>Coffeeangel | Dashboard</title>
+      {% endif %}
+    <link rel="apple-touch-icon" href="{{ url_for('static',filename='images/favicon/apple-touch-icon-152x152.png') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static',filename='images/favicon/favicon-32x32.png') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- BEGIN: VENDOR CSS-->
+    <link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='vendors/vendors.min.css') }}">
+    <link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='vendors/animate-css/animate.css') }}">
+    <link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='vendors/chartist-js/chartist.min.css') }}">
+    <link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='vendors/chartist-js/chartist-plugin-tooltip.css') }}">
+    <!-- END: VENDOR CSS-->
+    <!-- BEGIN: Page Level CSS-->
+    <link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='css/themes/vertical-modern-menu-template/materialize.css') }}">
+    <link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='css/themes/vertical-modern-menu-template/style.css') }}">
+    <link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='css/pages/dashboard-modern.css') }}">
+    <link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='css/pages/intro.css') }}">
+    {% block css %}{% endblock css %}
+    <!-- END: Page Level CSS-->
+    <!-- BEGIN: Custom CSS-->
+    <link rel="stylesheet" type="text/css" href= "{{ url_for('static',filename='css/custom/custom.css') }}">
+    <!-- END: Custom CSS-->
+  </head>
+  <!-- END: Head-->
+  <body class="vertical-layout vertical-menu-collapsible page-header-dark vertical-modern-menu preload-transitions 2-columns   " data-open="click" data-menu="vertical-modern-menu" data-col="2-columns">
+
+    <!-- BEGIN: Header-->
+    <header class="page-topbar" id="header">
+      <div class="navbar navbar-fixed">
+        <nav class="navbar-main navbar-color nav-collapsible sideNav-lock navbar-dark gradient-45deg-indigo-purple no-shadow">
+          <div class="nav-wrapper">
+            <div class="header-search-wrapper hide-on-med-and-down"><i class="material-icons">search</i>
+              <input class="header-search-input z-depth-2" type="text" name="Search" placeholder="Search" data-search="template-list">
+              <ul class="search-list collection display-none"></ul>
+            </div>
+            <ul class="navbar-list right">
+              <li class="hide-on-large-only search-input-wrapper"><a class="waves-effect waves-block waves-light search-button" href="javascript:void(0);"><i class="material-icons">search</i></a></li>
+              <li><a class="waves-effect waves-block waves-light profile-button" href="javascript:void(0);" data-target="profile-dropdown"><span class="avatar-status avatar-online"><img src="{{ image_file }}" alt="avatar"><i></i></span></a></li>
+            </ul>
+            <!-- profile-dropdown-->
+            <ul class="dropdown-content" id="profile-dropdown">
+              <li><a class="grey-text text-darken-1" href="account"><i class="material-icons">person_outline</i> Account</a></li>
+              <li><a class="grey-text text-darken-1" href="page-faq"><i class="material-icons">help_outline</i> Help</a></li>
+              <li class="divider"></li>
+              <li><a class="grey-text text-darken-1" href="user-lock-screen"><i class="material-icons">lock_outline</i> Lock</a></li>
+              <li><a class="grey-text text-darken-1" href="user-logout"><i class="material-icons">keyboard_tab</i> Logout</a></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+    </header>
+    <!-- END: Header-->
+
+    <!-- BEGIN: SideNav-->
+    {% block aside %}{% endblock aside %}
+    <!-- END: SideNav-->
+
+    <!-- BEGIN: Page Main-->
+    {% block main %}{% endblock main %}
+    <!-- END: Page Main-->
+
+    <!-- BEGIN: Footer-->
+
+    <footer class="page-footer footer footer-static footer-dark gradient-45deg-indigo-purple gradient-shadow navbar-border navbar-shadow">
+      <div class="footer-copyright">
+        <div class="container"><span>&copy; 2020          <a href="http://themeforest.net/user/pixinvent/portfolio?ref=pixinvent" target="_blank">PIXINVENT</a> All rights reserved.</span><span class="right hide-on-small-only">Design and Developed by <a href="https://pixinvent.com/">PIXINVENT</a></span></div>
+      </div>
+    </footer>
+
+    <!-- END: Footer-->
+    <!-- BEGIN VENDOR JS-->
+    <script type="text/javascript" src="{{ url_for('static',filename='js/vendors.min.js') }}"></script>
+    <!-- BEGIN VENDOR JS-->
+    <!-- BEGIN PAGE VENDOR JS-->
+    <script type="text/javascript" src="{{ url_for('static',filename='vendors/chartjs/chart.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='vendors/chartist-js/chartist.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='vendors/chartist-js/chartist-plugin-tooltip.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='vendors/chartist-js/chartist-plugin-fill-donut.min.js') }}"></script>
+    <!-- END PAGE VENDOR JS-->
+    <!-- BEGIN THEME  JS-->
+    <script type="text/javascript" src="{{ url_for('static',filename='js/plugins.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='js/search.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='js/custom/custom-script.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='js/scripts/customizer.js') }}"></script>
+    <!-- END THEME  JS-->
+    <!-- BEGIN PAGE LEVEL JS-->
+    <script type="text/javascript" src="{{ url_for('static',filename='js/scripts/dashboard-modern.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='js/scripts/intro.js') }}"></script>
+    {% block script %}{% endblock %}
+    <!-- END PAGE LEVEL JS-->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <script>
+                  M.toast({html: '{{message}}', classes: 'toast-{{category}}' })
+            </script>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+  </body>
+</html>

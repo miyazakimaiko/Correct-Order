@@ -1,0 +1,156 @@
+{% extends "layout-main.html" %}
+
+{% block aside %}
+    <aside class="sidenav-main nav-expanded nav-lock nav-collapsible sidenav-light sidenav-active-square">
+      <div class="brand-sidebar">
+        <h1 class="logo-wrapper"><a class="brand-logo darken-1" href="index"><img class="hide-on-med-and-down" src="{{ url_for('static',filename='images/logo/materialize-logo-color.png') }}" alt="materialize logo"/><img class="show-on-medium-and-down hide-on-med-and-up" src="{{ url_for('static',filename='images/logo/materialize-logo.png') }}" alt="materialize logo"/><span class="logo-text hide-on-med-and-down">CorrectOrder</span></a><a class="navbar-toggler" href="#"><i class="material-icons">radio_button_checked</i></a></h1>
+      </div>
+      <ul class="sidenav sidenav-collapsible leftside-navigation collapsible sidenav-fixed menu-shadow" id="slide-out" data-menu="menu-navigation" data-collapsible="menu-accordion">
+        <li class="navigation-header"><a class="navigation-header-text">Date:</a><i class="navigation-header-icon material-icons">more_horiz</i>
+        </li>
+        {% for i in range(dates|length) %}
+        <li class="bold"><a class="waves-effect waves-cyan" href="day{{ i }}"><span class="menu-title">({{ dates[i].day.capitalize() }}){{ dates[i].date }}</span></a>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="navigation-background"></div><a class="sidenav-trigger btn-sidenav-toggle btn-floating btn-medium waves-effect waves-light hide-on-large-only" href="#" data-target="slide-out"><i class="material-icons">menu</i></a>
+    </aside>
+{% endblock aside %}
+
+{% block main %}
+    <div id="main">
+      <div class="row">
+        <div class="content-wrapper-before gradient-45deg-indigo-purple"></div>
+        <div class="col s12">
+          <div class="container">
+            <div class="section">
+
+    <div class="order-content-head">
+        <div class="header-details">
+            <h5 class="m-0 sidebar-title">Edit Products  <a href="products-add">Add Products</a></h5>
+            <div id="geocode" data-geocode='{{ products_keys|tojson }}'></div>
+        </div>
+    </div>
+   <div class="row">
+      <form action="" method="POST" id="productEdit" class="col s12">
+         {{ form.hidden_tag() }}
+         <div class="card subscriber-list-card animate fadeRight" id="pastries">
+            <div class="card-content pb-1">
+               <h4 class="card-title mb-0">Pastries/Cakes</h4>
+            </div>
+            <table class="subscription-table striped">
+               <thead>
+                  <tr>
+                     <th>Product Name</th>
+                     <th class="align-center">Oneday shelf life</th>
+                     <th class="align-center">Acceptable<br>waste quantity</th>
+                     <th class="align-center">Acceptable<br>extra quantity</th>
+                  </tr>
+               </thead>
+               <tbody>
+               {% for p in pastry %}
+                  <tr>
+                     <td>{{ p.name }}</td>
+                     <td class="align-center">
+                        <div class="switch">
+                          <label>
+                              No
+                          {{ form.list_oneday_shelf_life[p.key](id='oneday_shelf_life-' ~ p.key) }}
+                          <span class="lever"></span>
+                              Yes
+                          </label>
+                        </div></td>
+                     <td class="align-center">
+                         {{ form.list_waste_quantity[p.key](type='number', id='waste-' ~ p.key, class='reminder-input') }}</td>
+                     <td class="align-center">
+                         {{ form.list_extra_quantity[p.key](type='number', id='extra-' ~ p.key, class='reminder-input') }}</td>
+                  </tr>
+               {% endfor %}
+               </tbody>
+            </table>
+         </div>
+         <div class="card subscriber-list-card animate fadeRight" id="breakfast">
+          <div class="card-content pb-1">
+             <h4 class="card-title mb-0">Breakfast</h4>
+          </div>
+          <table class="subscription-table striped">
+             <thead>
+                <tr>
+                   <th>Product Name</th>
+                   <th class="align-center">Oneday shelf life</th>
+                   <th class="align-center">Acceptable<br>waste quantity</th>
+                   <th class="align-center">Acceptable<br>extra quantity</th>
+                </tr>
+             </thead>
+             <tbody>
+                {% for b in breakfast %}
+                  <tr>
+                     <td>{{ b.name }}</td>
+                     <td class="align-center">
+                        <div class="switch">
+                          <label>
+                              No
+                          {{ form.list_oneday_shelf_life[b.key](id='oneday_shelf_life-' ~ b.key) }}
+                          <span class="lever"></span>
+                              Yes
+                          </label>
+                        </div></td>
+                     <td class="align-center">
+                         {{ form.list_waste_quantity[b.key](type='number', id='waste-' ~ b.key, class='reminder-input') }}</td>
+                     <td class="align-center">
+                         {{ form.list_extra_quantity[b.key](type='number', id='extra-' ~ b.key, class='reminder-input') }}</td>
+                  </tr>
+                {% endfor %}
+             </tbody>
+          </table>
+         </div>
+         <div class="card subscriber-list-card animate fadeRight" id="lunch">
+          <div class="card-content pb-1">
+             <h4 class="card-title mb-0">Lunch</h4>
+          </div>
+          <table class="subscription-table striped">
+             <thead>
+                <tr>
+                   <th>Product Name</th>
+                   <th class="align-center">Oneday shelf life</th>
+                   <th class="align-center">Acceptable<br>waste quantity</th>
+                   <th class="align-center">Acceptable<br>extra quantity</th>
+                </tr>
+             </thead>
+             <tbody>
+                {% for l in lunch %}
+                  <tr>
+                     <td>{{ l.name }}</td>
+                     <td class="align-center">
+                        <div class="switch">
+                          <label>
+                              No
+                          {{ form.list_oneday_shelf_life[l.key](id='oneday_shelf_life-' ~ l.key) }}
+                          <span class="lever"></span>
+                              Yes
+                          </label>
+                        </div></td>
+                     <td class="align-center">
+                         {{ form.list_waste_quantity[l.key](type='number', id='waste-' ~ l.key, class='reminder-input') }}
+                         </td>
+                     <td class="align-center">
+                         {{ form.list_extra_quantity[l.key](type='number', id='extra-' ~ l.key, class='reminder-input') }}
+                         </td>
+                  </tr>
+                {% endfor %}
+             </tbody>
+          </table>
+         </div>
+          <div class="col s12 display-flex justify-content-end">
+            {{ form.submit(class="btn indigo mr-1") }}
+            <a href="index" class="btn btn-light">Cancel</a>
+          </div>
+      </form>
+   </div>
+</div>
+          </div>
+          <div class="content-overlay"></div>
+        </div>
+      </div>
+    </div>
+{% endblock main %}

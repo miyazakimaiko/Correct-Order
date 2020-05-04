@@ -1,0 +1,166 @@
+{% extends "layout-main.html" %}
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/pages/page-users.css') }}">
+{% endblock css %}
+
+{% block aside %}
+    <aside class="sidenav-main nav-expanded nav-lock nav-collapsible sidenav-light sidenav-active-square">
+      <div class="brand-sidebar">
+        <h1 class="logo-wrapper"><a class="brand-logo darken-1" href="index"><img class="hide-on-med-and-down" src="{{ url_for('static',filename='images/logo/materialize-logo-color.png') }}" alt="materialize logo"/><img class="show-on-medium-and-down hide-on-med-and-up" src="{{ url_for('static',filename='images/logo/materialize-logo.png') }}" alt="materialize logo"/><span class="logo-text hide-on-med-and-down">CorrectOrder</span></a><a class="navbar-toggler" href="#"><i class="material-icons">radio_button_checked</i></a></h1>
+      </div>
+      <ul class="sidenav sidenav-collapsible leftside-navigation collapsible sidenav-fixed menu-shadow" id="slide-out" data-menu="menu-navigation" data-collapsible="menu-accordion">
+        <li class="navigation-header"><a class="navigation-header-text">Sales Prediction</a><i class="navigation-header-icon material-icons">more_horiz</i>
+        </li>
+        <li class="bold"><a class="collapsible-header waves-effect waves-cyan " href="JavaScript:void(0)"><i class="material-icons">settings_input_svideo</i><span class="menu-title" data-i18n="Dashboard">Daily</span></a>
+          <div class="collapsible-body">
+            <ul class="collapsible collapsible-sub" data-collapsible="accordion">
+                {% block date_list %}{% endblock %}
+            </ul>
+          </div>
+        </li>
+        <li class="bold"><a class="collapsible-header waves-effect waves-cyan " href="JavaScript:void(0)"><i class="material-icons">settings_input_svideo</i><span class="menu-title" data-i18n="Dashboard">Weekly</span></a>
+          <div class="collapsible-body">
+            <ul class="collapsible collapsible-sub" data-collapsible="accordion">
+            </ul>
+          </div>
+        </li>
+        <li class="bold"><a class="collapsible-header waves-effect waves-cyan " href="JavaScript:void(0)"><i class="material-icons">settings_input_svideo</i><span class="menu-title" data-i18n="Dashboard">Monthly</span></a>
+          <div class="collapsible-body">
+            <ul class="collapsible collapsible-sub" data-collapsible="accordion">
+            </ul>
+          </div>
+        </li>
+      </ul>
+      <div class="navigation-background"></div><a class="sidenav-trigger btn-sidenav-toggle btn-floating btn-medium waves-effect waves-light hide-on-large-only" href="#" data-target="slide-out"><i class="material-icons">menu</i></a>
+    </aside>
+{% endblock aside %}
+
+{% block main %}
+     <!-- BEGIN: Page Main-->
+    <div id="main">
+      <div class="row">
+        <div class="content-wrapper-before gradient-45deg-indigo-purple"></div>
+        <div class="breadcrumbs-dark pb-0 pt-4" id="breadcrumbs-wrapper">
+          <!-- Search for small screen-->
+          <div class="container">
+            <div class="row">
+              <div class="col s10 m6 l6">
+                <h5 class="breadcrumbs-title mt-0 mb-0"><span>Account edit</span></h5>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col s12">
+          <div class="container">
+            <!-- users edit start -->
+<div class="section users-edit">
+  <div class="card">
+    <div class="card-content">
+      <!-- <div class="card-body"> -->
+      <div class="row">
+        <div class="col s12" id="account">
+          <!-- users edit media object start -->
+          <div class="media display-flex align-items-center mb-2">
+            <a class="mr-2" href="#">
+              <img src="{{ image_file }}" id="user-avatar" alt="users avatar" class="z-depth-4 circle"
+                height="64" width="64">
+            </a>
+            <div class="media-body">
+              <h5 class="media-heading mt-0">Avatar</h5>
+              <div class="user-edit-btns display-flex">
+                {{ form.picture.label(class="btn-small indigo", for="picture", **{'style': 'margin-right:1rem'}) }}
+                {{ form.picture(id="picture", form="accountForm", **{'style': 'display:none'}) }}
+                {% if form.picture.errors %}
+                    {% for error in form.picture.errors %}
+                        <span>{{ error }}</span><br>
+                    {% endfor %}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          <!-- users edit media object ends -->
+          <!-- users edit account form start -->
+          <form method="POST" action="" id="accountForm" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <div class="row">
+              <div class="col s12 m6">
+                <div class="row">
+                  <div class="col s12 input-field">
+                    {% if form.name.errors %}
+                        {{ form.name(id="name", type="text", class="is-invalid", **{'data-error':'.errorTxt1'}) }}
+                        <div class="invalid-feedback">
+                          {% for error in form.name.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                        </div>
+                        {{ form.name.label(for="name", class="invalid-feedback") }}
+                    {% else %}
+                        {{ form.name(id="name", type="text", class="validate", **{'data-error':'.errorTxt1'}) }}
+                        {{ form.name.label(for="name") }}
+                    {% endif %}
+                    <small class="errorTxt1"></small>
+                  </div>
+                  <div class="col s12 input-field">
+                    {% if form.email.errors %}
+                        {{ form.email(id="email", type="email", class="is-invalid", **{'data-error':'.errorTxt3'}) }}
+                        <div class="invalid-feedback">
+                          {% for error in form.email.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                        </div>
+                        {{ form.email.label(for="email")}}
+                    {% else %}
+                        {{ form.email(id="email", type="email", class="validate", **{'data-error':'.errorTxt3'}) }}
+                        {{ form.email.label(for="email") }}
+                    {% endif %}
+                    <small class="errorTxt3"></small>
+                  </div>
+                </div>
+              </div>
+              <div class="col s12 m6">
+                <div class="row">
+                  <div class="col s12 input-field">
+                    <select disabled>
+                      {% for role in roles %}
+                          {% if role.name == current_user.roles[0].name %}
+                          <option selected>{{ role.name }}</option>
+                          {% else %}
+                          <option>{{ role.name }}</option>
+                          {% endif %}
+                      {% endfor %}
+                    </select>
+                    <label>Role</label>
+                  </div>
+                  <div class="col s12 input-field">
+                    <select id="branch" name="branch">
+                      {% for b in form.branch %}
+                          {{ b(id=form.branch.b) }}
+                      {% endfor %}
+                    </select>
+                    <label>Location</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col s12 display-flex justify-content-end mt-3">
+                <button type="submit" class="btn indigo">
+                  Save changes</button>
+                <a href="account" class="btn btn-light">Cancel</a>
+              </div>
+            </div>
+          </form>
+          <!-- users edit account form ends -->
+        </div>
+      </div>
+      <!-- </div> -->
+    </div>
+  </div>
+</div>
+<!-- users edit ends -->
+          <div class="content-overlay"></div>
+        </div>
+      </div>
+    </div>
+    <!-- END: Page Main-->
+
+{% endblock main %}

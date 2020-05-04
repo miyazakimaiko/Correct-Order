@@ -1,0 +1,114 @@
+{% extends "layout-user.html" %}
+
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/pages/register.css') }}">
+{% endblock css %}
+
+{% block body %}
+  <body class="vertical-layout vertical-menu-collapsible page-header-dark vertical-modern-menu preload-transitions 1-column register-bg   blank-page blank-page" data-open="click" data-menu="vertical-modern-menu" data-col="1-column">
+    <div class="row">
+      <div class="col s12">
+        <div class="container"><div id="register-page" class="row">
+  <div class="col s12 m6 l4 z-depth-4 card-panel border-radius-6 register-card bg-opacity-8">
+    <form method="POST" action="" class="login-form">
+      {{ form.hidden_tag() }}
+      <div class="row">
+        <div class="input-field col s12">
+          <h5 class="ml-4">Register</h5>
+          <p class="ml-4">Join to our community now !</p>
+        </div>
+      </div>
+      <div class="row margin">
+        <div class="input-field col s12">
+          <i class="material-icons prefix pt-2">person_outline</i>
+          {% if form.name.errors %}
+              {{ form.name(id="name", type="text", class="is-invalid") }}
+              <div class="invalid-feedback">
+                {% for error in form.name.errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+              </div>
+              {{ form.name.label(for="name", class="center-align invalid-feedback") }}
+          {% else %}
+              {{ form.name(id="name", type="text") }}
+              {{ form.name.label(for="name", class="center-align") }}
+          {% endif %}
+        </div>
+      </div>
+      <div class="row margin">
+        <div class="input-field col s12">
+          <i class="material-icons prefix pt-2">mail_outline</i>
+          {% if form.email.errors %}
+              {{ form.email(id="email", type="email", class="is-invalid") }}
+              <div class="invalid-feedback">
+                {% for error in form.email.errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+              </div>
+              {{ form.email.label(for="email", class="invalid-feedback") }}
+          {% else %}
+              {{ form.email(id="email", type="email") }}
+              {{ form.email.label(for="email") }}
+          {% endif %}
+        </div>
+      </div>
+      <div class="row margin">
+        <div class="input-field col s12">
+          <i class="material-icons prefix pt-2">shop_outline</i>
+          <select id="branch" name="branch">
+            {% for b in form.branch %}
+                {{ b(id=form.branch.c) }}
+            {% endfor %}
+          </select>
+          {{ form.branch.label }}
+        </div>
+      </div>
+      <div class="row margin">
+        <div class="input-field col s12">
+          <i class="material-icons prefix pt-2">lock_outline</i>
+          {% if form.password.errors %}
+              {{ form.password(id="password", type="password", class="is-invalid") }}
+              <div class="invalid-feedback">
+                {% for error in form.password.errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+              </div>
+              {{ form.password.label(for="password", class="invalid-feedback") }}
+          {% else %}
+              {{ form.password(id="password", type="password") }}
+              {{ form.password.label(for="password") }}
+          {% endif %}
+        </div>
+      </div>
+      <div class="row margin">
+        <div class="input-field col s12">
+          <i class="material-icons prefix pt-2">lock_outline</i>
+                    {% if form.confirm_password.errors %}
+              {{ form.confirm_password(id="password-again", type="password", class="is-invalid") }}
+              <div class="invalid-feedback">
+                {% for error in form.confirm_password.errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+              </div>
+              {{ form.confirm_password.label(for="password-again", class="invalid-feedback") }}
+          {% else %}
+              {{ form.confirm_password(id="password-again", type="password") }}
+              {{ form.confirm_password.label(for="password-again") }}
+          {% endif %}
+        </div>
+      </div>
+      <div class="row">
+        <div class="input-field col s12">
+          {{ form.submit(class="btn waves-effect waves-light border-round gradient-45deg-purple-deep-orange col s12") }}
+        </div>
+      </div>
+      <div class="row">
+        <div class="input-field col s12">
+          <p class="margin medium-small"><a href="user-login">Already have an account? Login</a></p>
+          <p class="margin medium-small"><a href="branch-register">Need an Branch account? Register a Branch</a></p>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock body %}

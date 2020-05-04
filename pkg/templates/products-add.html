@@ -1,0 +1,155 @@
+{% extends "layout-main.html" %}
+
+{% block aside %}
+    <aside class="sidenav-main nav-expanded nav-lock nav-collapsible sidenav-light sidenav-active-square">
+      <div class="brand-sidebar">
+        <h1 class="logo-wrapper"><a class="brand-logo darken-1" href="index"><img class="hide-on-med-and-down" src="{{ url_for('static',filename='images/logo/materialize-logo-color.png') }}" alt="materialize logo"/><img class="show-on-medium-and-down hide-on-med-and-up" src="{{ url_for('static',filename='images/logo/materialize-logo.png') }}" alt="materialize logo"/><span class="logo-text hide-on-med-and-down">CorrectOrder</span></a><a class="navbar-toggler" href="#"><i class="material-icons">radio_button_checked</i></a></h1>
+      </div>
+      <ul class="sidenav sidenav-collapsible leftside-navigation collapsible sidenav-fixed menu-shadow" id="slide-out" data-menu="menu-navigation" data-collapsible="menu-accordion">
+        <li class="navigation-header"><a class="navigation-header-text">Date:</a><i class="navigation-header-icon material-icons">more_horiz</i>
+        </li>
+        {% for i in range(dates|length) %}
+        <li class="bold"><a class="waves-effect waves-cyan" href="day{{ i }}"><span class="menu-title">({{ dates[i].day.capitalize() }}){{ dates[i].date }}</span></a>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="navigation-background"></div><a class="sidenav-trigger btn-sidenav-toggle btn-floating btn-medium waves-effect waves-light hide-on-large-only" href="#" data-target="slide-out"><i class="material-icons">menu</i></a>
+    </aside>
+{% endblock aside %}
+
+{% block main %}
+    <div id="main">
+      <div class="row">
+        <div class="content-wrapper-before gradient-45deg-indigo-purple"></div>
+        <div class="breadcrumbs-dark pb-0 pt-4" id="breadcrumbs-wrapper">
+          <!-- Search for small screen-->
+          <div class="container">
+            <div class="row">
+              <div class="col s10 m6 l6">
+                <h5 class="breadcrumbs-title mt-0 mb-0"><span>Add Product</span></h5>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col s12">
+          <div class="container">
+            <!-- users edit start -->
+<div class="section users-edit">
+  <div class="card">
+    <div class="card-content">
+      <!-- <div class="card-body"> -->
+      <div class="row">
+        <div class="col s12" id="account">
+          <!-- users edit account form start -->
+          <form method="POST" action="" id="productForm">
+            {{ form.hidden_tag() }}
+            <div class="row">
+              <div class="col s12 m6">
+                <div class="row">
+                  <div class="col s12 input-field">
+                    {% if form.name.errors %}
+                        {{ form.name(id="name", type="text", class="is-invalid", **{'data-error':'.errorTxt1'}) }}
+                        <div class="invalid-feedback">
+                          {% for error in form.name.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                        </div>
+                        {{ form.name.label(for="name", class="invalid-feedback") }}
+                    {% else %}
+                        {{ form.name(id="name", type="text", class="validate", **{'data-error':'.errorTxt1'}) }}
+                        {{ form.name.label(for="name") }}
+                    {% endif %}
+                    <small class="errorTxt1"></small>
+                  </div>
+                  <div class="col s12 input-field">
+                    {% if form.key.errors %}
+                        {{ form.key(id="key", type="text", class="is-invalid", **{'data-error':'.errorTxt2'}) }}
+                        <div class="invalid-feedback">
+                          {% for error in form.key.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                        </div>
+                        {{ form.key.label(for="key", class="invalid-feedback") }}
+                    {% else %}
+                        {{ form.key(id="key", type="text", class="validate", **{'data-error':'.errorTxt2'}) }}
+                        {{ form.key.label(for="key") }}
+                    {% endif %}
+                    <small class="errorTxt1"></small>
+                  </div>
+                  <div class="col s12 input-field">
+                    <select id="category" name="category">
+                      {% for c in form.category %}
+                          {{ c(id=form.category.c) }}
+                      {% endfor %}
+                    </select>
+                    <label>Category</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col s12 m6">
+                <div class="row">
+                  <label for="shelf-life">Single Day Shelf Life</label>
+                  <div class="col s12 input-field">
+                    <div class="switch">
+                        {% if not form.oneday_shelf_life.errors %}
+                            <label for="oneday_shelf_life">
+                                No
+                                <input id="oneday_shelf_life" name="oneday_shelf_life" type="checkbox">
+                                <span class="lever"></span>
+                                Yes
+                            </label>
+                        {% endif %}
+                        </div>
+                  </div>
+                  <div class="col s12 input-field">
+                    {% if form.acceptable_waste_quantity.errors %}
+                        {{ form.acceptable_waste_quantity(id="waste", type="number", class="is-invalid", **{'data-error':'.errorTxt3'}) }}
+                        <div class="invalid-feedback">
+                          {% for error in form.acceptable_waste_quantity.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                        </div>
+                        {{ form.acceptable_waste_quantity.label(for="waste", class="invalid-feedback") }}
+                    {% else %}
+                        {{ form.acceptable_waste_quantity(id="waste", type="number", class="validate", value="0", disabled=true, **{'data-error':'.errorTxt3'}) }}
+                        {{ form.acceptable_waste_quantity.label(for="waste") }}
+                    {% endif %}
+                    <label>Acceptable Waste Quantity</label>
+                  </div>
+                  <div class="col s12 input-field">
+                    {% if form.acceptable_extra_quantity.errors %}
+                        {{ form.acceptable_extra_quantity(id="extra", type="number", class="is-invalid", **{'data-error':'.errorTxt4'}) }}
+                        <div class="invalid-feedback">
+                          {% for error in form.acceptable_extra_quantity.errors %}
+                              <span>{{ error }}</span>
+                          {% endfor %}
+                        </div>
+                        {{ form.acceptable_extra_quantity.label(for="extra", class="invalid-feedback") }}
+                    {% else %}
+                        {{ form.acceptable_extra_quantity(id="extra", type="number", class="validate", value="0", **{'data-error':'.errorTxt4'}) }}
+                        {{ form.acceptable_extra_quantity.label(for="extra") }}
+                    {% endif %}
+                    <label>Acceptable Extra Quantity</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col s12 display-flex justify-content-end mt-3">
+                <button type="submit" class="btn indigo">
+                  Save Product</button>
+                <a href="index" class="btn btn-light">Cancel</a>
+              </div>
+            </div>
+          </form>
+          <!-- users edit account form ends -->
+        </div>
+      </div>
+      <!-- </div> -->
+    </div>
+  </div>
+</div>
+<!-- users edit ends -->
+          <div class="content-overlay"></div>
+        </div>
+      </div>
+    </div>
+{% endblock main %}

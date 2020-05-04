@@ -1,0 +1,20 @@
+{% extends "layout-dashboard.html" %}
+
+{% block date_list %}
+    {% for i in range(dates|length) %}
+        {% if i==4 %}
+        <li class="bold active"><a class="waves-effect waves-cyan active" href="day{{ i }}"><span class="menu-title">({{ dates[i].day.capitalize() }}){{ dates[i].date }}</span></a>
+        </li>
+        {% else %}
+        <li class="bold"><a class="waves-effect waves-cyan " href="day{{ i }}"><span class="menu-title">({{ dates[i].day.capitalize() }}){{ dates[i].date }}</span></a>
+        </li>
+        {% endif %}
+    {% endfor %}
+{% endblock date_list %}
+
+{% block date %}
+    {% if dates[4] %}
+    <h5 class="m-0 sidebar-title">Order Recommendation for ({{ dates[4].day.capitalize() }}){{ dates[4].date }}</h5>
+    {% endif %}
+{% endblock date %}
+

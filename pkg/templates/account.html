@@ -1,0 +1,130 @@
+{% extends "layout-main.html" %}
+
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/pages/page-users.css') }}">
+{% endblock css %}
+
+{% block aside %}
+    <aside class="sidenav-main nav-expanded nav-lock nav-collapsible sidenav-light sidenav-active-square">
+      <div class="brand-sidebar">
+        <h1 class="logo-wrapper"><a class="brand-logo darken-1" href="index"><img class="hide-on-med-and-down" src="{{ url_for('static',filename='images/logo/materialize-logo-color.png') }}" alt="materialize logo"/><img class="show-on-medium-and-down hide-on-med-and-up" src="{{ url_for('static',filename='images/logo/materialize-logo.png') }}" alt="materialize logo"/><span class="logo-text hide-on-med-and-down">CorrectOrder</span></a><a class="navbar-toggler" href="#"><i class="material-icons">radio_button_checked</i></a></h1>
+      </div>
+      <ul class="sidenav sidenav-collapsible leftside-navigation collapsible sidenav-fixed menu-shadow" id="slide-out" data-menu="menu-navigation" data-collapsible="menu-accordion">
+        <li class="navigation-header"><a class="navigation-header-text">Sales Prediction</a><i class="navigation-header-icon material-icons">more_horiz</i>
+        </li>
+        <li class="bold"><a class="collapsible-header waves-effect waves-cyan " href="JavaScript:void(0)"><i class="material-icons">settings_input_svideo</i><span class="menu-title" data-i18n="Dashboard">Daily</span></a>
+          <div class="collapsible-body">
+            <ul class="collapsible collapsible-sub" data-collapsible="accordion">
+                {% block date_list %}{% endblock %}
+            </ul>
+          </div>
+        </li>
+        <li class="bold"><a class="collapsible-header waves-effect waves-cyan " href="JavaScript:void(0)"><i class="material-icons">settings_input_svideo</i><span class="menu-title" data-i18n="Dashboard">Weekly</span></a>
+          <div class="collapsible-body">
+            <ul class="collapsible collapsible-sub" data-collapsible="accordion">
+            </ul>
+          </div>
+        </li>
+        <li class="bold"><a class="collapsible-header waves-effect waves-cyan " href="JavaScript:void(0)"><i class="material-icons">settings_input_svideo</i><span class="menu-title" data-i18n="Dashboard">Monthly</span></a>
+          <div class="collapsible-body">
+            <ul class="collapsible collapsible-sub" data-collapsible="accordion">
+            </ul>
+          </div>
+        </li>
+      </ul>
+      <div class="navigation-background"></div><a class="sidenav-trigger btn-sidenav-toggle btn-floating btn-medium waves-effect waves-light hide-on-large-only" href="#" data-target="slide-out"><i class="material-icons">menu</i></a>
+    </aside>
+{% endblock aside %}
+
+{% block main %}
+    <div id="main">
+      <div class="row">
+        <div class="content-wrapper-before gradient-45deg-indigo-purple"></div>
+        <div class="breadcrumbs-dark pb-0 pt-4" id="breadcrumbs-wrapper">
+          <!-- Search for small screen-->
+          <div class="container">
+            <div class="row">
+              <div class="col s12">
+                <h5 class="breadcrumbs-title mt-0 mb-0"><span>Account</span></h5>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col s12">
+          <div class="container">
+            <!-- users view start -->
+<div class="section users-view">
+  <!-- users view media object start -->
+  <div class="card-panel">
+    <div class="row">
+      <div class="col s12 m7">
+        <div class="display-flex media">
+          <a href="#" class="avatar">
+            <img src="{{ image_file }}" alt="users view avatar" class="z-depth-4 circle"
+              height="64" width="64">
+          </a>
+          <div class="media-body">
+            <h6 class="media-heading">
+              <span class="users-view-name">{{ current_user.name }}</span>
+            </h6>
+            <span>ID:</span>
+            <span class="users-view-id">{{ current_user.id }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col s12 m5 quick-action-btns display-flex justify-content-end align-items-center pt-2">
+        <a href="account-edit" class="btn-small indigo">Edit</a>
+      </div>
+    </div>
+  </div>
+  <!-- users view media object ends -->
+  <!-- users view card data start -->
+  <div class="card">
+    <div class="card-content">
+      <div class="row">
+        <div class="col s12">
+          <table class="striped">
+            <tbody>
+              <tr>
+                <td>Username:</td>
+                <td>{{ current_user.name }}</td>
+              </tr>
+              <tr>
+                <td>E-mail:</td>
+                <td class="users-view-latest-activity">{{ current_user.email }}</td>
+              </tr>
+              <tr>
+                <td>Branch:</td>
+                <td class="users-view-verified">
+                  {% for branch in current_user.branch %}
+                      {{ branch.name }}
+                  {% endfor %}
+                </td>
+              </tr>
+              <tr>
+                <td>Role:</td>
+                <td class="users-view-role">
+                  {% for role in current_user.roles %}
+                      {{ role.name }}
+                  {% endfor %}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- users view card data ends -->
+
+</div>
+<!-- users view ends -->
+              <div style="bottom: 50px; right: 19px; display: none;" class="fixed-action-btn direction-top"><a class="btn-floating btn-large gradient-45deg-light-blue-cyan gradient-shadow"><i class="material-icons">add</i></a>
+</div>
+          </div>
+          <div class="content-overlay"></div>
+        </div>
+      </div>
+    </div>
+    <!-- END: Page Main-->
+{% endblock main %}
