@@ -39,7 +39,6 @@ breakfast = Product.query.filter(Product.category.contains(b)).all()
 pastry = Product.query.filter(Product.category.contains(p)).all()
 lunch = Product.query.filter(Product.category.contains(l)).all()
 
-
 dates = []
 
 for i in range(7):

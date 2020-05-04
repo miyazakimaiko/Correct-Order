@@ -3,7 +3,7 @@
 {% block date_list %}
     {% for i in range(dates|length) %}
         {% if i==0 %}
-        <li class="bold active"><a class="waves-effect waves-cyan active" href="day{{ i }}"><i class="material-icons">radio_button_checked</i><span class="menu-title">({{ dates[i].day }}){{ dates[i].date }}</span></a>
+        <li class="bold active"><a class="waves-effect waves-cyan active" href="day{{ i }}"><i class="material-icons">radio_button_checked</i><span class="menu-title"> test ({{ dates[i].day }}){{ dates[i].date }}</span></a>
         </li>
         {% else %}
         <li class="bold"><a class="waves-effect waves-cyan " href="day{{ i }}"><i class="material-icons">radio_button_unchecked</i><span class="menu-title">({{ dates[i].day }}){{ dates[i].date }}</span></a>
