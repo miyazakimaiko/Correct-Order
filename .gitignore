@@ -20,3 +20,4 @@ pkg/__pycache__/__init__.cpython-38.pyc
 pkg/__pycache__/forms.cpython-38.pyc
 pkg/__pycache__/models.cpython-38.pyc
 pkg/__pycache__/routes.cpython-38.pyc
+pkg/daily_sales_csv
