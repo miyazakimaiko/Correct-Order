@@ -43,9 +43,17 @@ dates = []
 
 for i in range(7):
     d = datetime.date.today() + datetime.timedelta(days=i)
-    date = {'date': d.strftime("%m/%d/%y"),
+    date = {'date': d.strftime("%d/%m/%y"),
             'day': d.strftime('%a')}
     dates.append(date)
+
+
+weeks = []
+
+for i in range(1, 36, 7):
+    w = datetime.date.today() + datetime.timedelta(days=i)
+    week = w.strftime("%V")
+    weeks.append(week)
 
 
 @app.route("/user-register", methods=['GET', 'POST'])
