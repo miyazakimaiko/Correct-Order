@@ -1,0 +1,36 @@
+Item;Catalog Number;Type;Supplier name;Tag;Unit of measurement;Purchased;Returned;Sold;Wasted;Purchasing deviation (%);Purchasing deviation (€);Beginning inventory;Expected inventory;Ending inventory;Inventory deviation;Inventory deviation (%);Inventory deviation (€)
+Scone Mixed Berry, 1 unit in Unit, 1 units in package;MB-SCONE;;Kitchen;COS - Kitchen / Baked Goods;Unit;16;0;12;12;33.3333 %;2.8;4;-4;3;7;-175 %;4.9
+Oatmeal Raisin Cookie, 1 unit in each, 1 units in package;OAT-COOK;;Kitchen;COS - Kitchen / Baked Goods;each;4;0;5;0;-20 %;-0.55;6;5;8;3;60 %;1.65
+Raspberry Brownie, 1 unit in Bag, 1 units in package;RASP-BROWN;;Kitchen;COS - Kitchen / Baked Goods;Bag;5;0;6;6;-16.6667 %;-0.91;6;-1;2;3;-300 %;2.73
+Financier Almond, 1 unit in Unit, 1 units in package;FIN-ALM;;Kitchen;COS - Kitchen / Baked Goods;Unit;4;0;0;0;;2.8;-25;-21;0;21;-100 %;14.7
+Raspberry Jam, 3.5 kg in Tub, 1 units in package;RASP-JAM-3.5KG;;Kitchen;COS - Kitchen / Breakfast;Tub;1;0;0.1214;0;723.5294 %;14.3471;-0.27;0.6086;1.0929;0.4843;79.5775 %;7.9084
+Ham & Cheese Toastie, 1 unit, 1 units in package;HC-TOASTIE;;Kitchen;COS - Kitchen / S&S;units;3;0;2;4;50 %;2.2;0;-3;2;5;-166.6667 %;11
+Soup of the Day;;Master Product;;;L;2.5;0;0.7;27;257.1429 %;1.8;24.5;-0.7;2.5;3.2;-457.1429 %;3.2
+Ham & Cheese Croissant, 1 unit in Each, 1 units in package;HC-CROIS;;Kitchen;COS - Kitchen / Breakfast;Each;3;0;0;1;;5.16;6;8;5;-3;-37.5 %;-5.16
+Sourdough Loaf, 1 unit in bag, 1 units in package;SOUR-LOAF;;Kitchen;COS - Kitchen / Breakfast;bag;1;0;0.05;4;1900 %;4.7025;5.2;2.15;1.9;-0.25;-11.6279 %;-1.2375
+Anzac Cookie, 1 unit in Each, 1 units in package;ANZAC;;Kitchen;COS - Kitchen / Baked Goods;Each;6;0;6;0;0 %;0;-1;-1;2;3;-300 %;1.89
+Snickers Ball, 1 unit in Each, 1 units in package;SNICK-BALL;;Kitchen;COS - Kitchen / Baked Goods;Each;6;0;8;0;-25 %;-1.92;-3;-5;1;6;-120 %;5.76
+Cinnabun, 1 unit in Each, 1 units in package;CINNABUN;;Kitchen;COS - Kitchen / Baked Goods;Each;7;0;7;7;0 %;0;4;-3;0;3;-100 %;2.85
+Yoghurt Granola Pot, 1 unit in Pot, 1 units in package;YOG-POT;;Kitchen;COS - Kitchen / Breakfast;Pot;4;0;1;5;300 %;4.95;4;2;1;-1;-50 %;-1.65
+Plain Croissant, 1 unit in each, 1 units in package;BUTTER-CROIS;;Kitchen;COS - Kitchen / Baked Goods;each;10;0;5;10;100 %;3.75;11;6;7;1;16.6667 %;0.75
+Pain au Chocolat, 1 unit in each, 1 units in package;PAIN-CHOC;;Kitchen;COS - Kitchen / Baked Goods;each;10;0;3;16;233.3333 %;5.6;7;-2;-1;1;-50 %;0.8
+Pain au Raisin, 1 unit in each, 1 units in package;PAIN-RAIS;;Kitchen;COS - Kitchen / Baked Goods;each;10;0;6;11;66.6667 %;3.4;7;0;2;2;;1.7
+Chicken Bacon Wrap, 1 EA in bag, 1 units in package;CHICKEN-WRAP;;Kitchen;COS - Kitchen / S&S;bag;3;0;2;0;50 %;3.01;4;5;5;0;0 %;0
+CAPRESE ROLL, 1 EA in bag, 1 units in package;CAPRESE;;Kitchen;COS - Kitchen / S&S;bag;3;0;3;5;0 %;0;4;-1;2;3;-300 %;8.55
+Sausage Roll, 1 unit in each, 1 units in package;S-ROLL;;Kitchen;COS - Kitchen / Breakfast;each;9;0;2;9;350 %;9.31;6;4;4;0;0 %;0
+Blueberry banana bread, 1 EA in bag, 1 units in package;BAN-BERRYLOAF;;Kitchen;COS - Kitchen / Baked Goods;bag;6;0;5;16;20 %;0.93;21;6;8;2;33.3333 %;1.86
+Vegan Squash wrap, 1 EA in bag, 1 units in package;VEGAN-SQUASH;;Kitchen;COS - Kitchen / S&S;bag;3;0;0;4;;8.61;4;3;3;0;0 %;0
+Bacon Soda, 1 unit in Bag, 1 units in package;BCON-SODA;;Kitchen;COS - Kitchen / Breakfast;Bag;2;0;0;0;;3.3;2;4;3;-1;-25 %;-1.65
+Chicken Chorizo Bap, 1 unit in Bag, 1 units in package;CHICK-CHORIZO;;Kitchen;COS - Kitchen / S&S;Bag;3;0;2;6;50 %;3;4;-1;1;2;-200 %;6
+Peanut Butter & Chocolate Cookie, 1 unit in Each, 1 units in package;PNUT-COOKIE;;Kitchen;COS - Kitchen / Baked Goods;Each;6;0;5;8;20 %;0.5;3;-4;0;4;-100 %;2
+Tuna Bap, 1 unit in Each, 1 units in package;TUNA-BAP;;Kitchen;COS - Kitchen / S&S;Each;2;0;1;0;100 %;2.2;1;2;3;1;50 %;2.2
+Fresh Milk;;Master Product;;;L;84;0;40.965;0;105.0531 %;27.2236;164.6517;207.6867;98.875;-108.8117;-52.3922 %;-68.8335
+Ballymaloe Relish, 1 kg in Container, 1 units in package;BAL-REL;;Kitchen;COS - Kitchen / S&S;Container;0;0;0.06;2;-100 %;-0.33;2.74;0.68;0.9;0.22;32.3529 %;1.21
+Condensed Milk, 227 g in Tin, 1 units in package;COND-MILK;;Kitchen;COS - Coffee;Tin;0;0;0.1762;0;-100 %;-0.4405;1.2841;1.1079;1.5;0.3921;35.3877 %;0.9802
+Catering Crisps, 200 g in Bag, 1 units in package;CAT-CRISP;;Kitchen;COS - Kitchen / S&S;Bag;0;0;0.625;0;-100 %;-0.8125;23.075;22.45;5.5;-16.95;-75.5011 %;-22.035
+Porridge Oats, 750 g in Bag, 1 units in package;PORR-OATS;;Kitchen;;Bag;0;0;0;10;;0;14.9667;4.9667;2.2;-2.7667;-55.7047 %;-6.9167
+porridge topper, 1 kg in bag, 1 units in package;PORR-TOP;;Kitchen;COS - Kitchen / Breakfast;bag;0;0;0;0;;0;4.833;4.833;1.2;-3.633;-75.1707 %;-42.9421
+Honey, 1 L in Tub, 1 units in package;HONEY-1L;;Kitchen;COS - Kitchen / Breakfast;Tub;0;0;0;0;;0;2.93;2.93;2.9;-0.03;-1.0239 %;-0.2787
+Falafel Wrap, 1 unit in each, 1 units in package;FAL-WRP;;Kitchen;;PKGs;0;0;0;0;;0;-4;-4;-4;0;0 %;0
+Chicken Mozzarella Wrap, 1 unit in Bag, 1 units in package;CHICK-MOZZ;;Kitchen;;PKGs;0;0;0;0;;0;-4;-4;0;4;-100 %;10
+Turkey Sandwich, 1 unit in Bag, 1 units in package;TUR-SAN;;Kitchen;;PKGs;0;0;0;0;;0;4;4;0;-4;-100 %;-10
