@@ -5,7 +5,7 @@ from flask import render_template, url_for, flash, redirect, request
 from functools import wraps
 from .forms import UserRegistrationForm, BranchRegistrationForm, ProductRegistrationForm, LoginForm, UpdateAccountForm
 from . import app, db, bcrypt, login_manager
-from .models import User, Role, Branch, Product, Category
+from .models import User, Role, Branch, Product, Category, ProductBranch
 from flask_user import roles_required
 from flask_login import login_user, logout_user, current_user
 from wtforms.form import BaseForm
@@ -32,12 +32,21 @@ def load_user(user_id):
 roles = Role.query.all()
 branches = Branch.query.all()
 
-b = Category.query.filter_by(name='Breakfast').first()
-p = Category.query.filter_by(name='Pastries').first()
-l = Category.query.filter_by(name='Lunch').first()
-breakfast = Product.query.filter(Product.category.contains(b)).all()
-pastry = Product.query.filter(Product.category.contains(p)).all()
-lunch = Product.query.filter(Product.category.contains(l)).all()
+# if current_user.is_authenticated:
+#     current_branch = current_user.branches
+#     b = Category.query.filter_by(name='Breakfast').first()
+#     p = Category.query.filter_by(name='Pastries').first()
+#     l = Category.query.filter_by(name='Lunch').first()
+#     breakfast = ProductBranch.query.filter_by(branch_id=current_branch.id).filter_by(product_id=b.id).all()
+#     pastries = ProductBranch.query.filter_by(branch_id=current_branch.id).filter_by(product_id=p.id).all()
+#     lunch = ProductBranch.query.filter_by(branch_id=current_branch.id).filter_by(product_id=l.id).all()
+
+# b = Category.query.filter_by(name='Breakfast').first()
+# p = Category.query.filter_by(name='Pastries').first()
+# l = Category.query.filter_by(name='Lunch').first()
+# breakfast = Product.query.filter(Product.category == b).all()
+# pastry = Product.query.filter(Product.category == p).all()
+# lunch = Product.query.filter(Product.category == l).all()
 
 dates = []
 
@@ -61,13 +70,13 @@ def userRegister():
     form = UserRegistrationForm()
     if form.validate_on_submit():
         staff_branch = Branch.query.filter_by(name=form.branch.data).first()
+        staff_role = Role.query.filter_by(name='Staff').first()
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         user = User(name=form.name.data,
                     email=form.email.data,
-                    branch=[staff_branch,],
+                    branches=staff_branch,
+                    role=staff_role,
                     password=hashed_password)
-        staff_role = Role.query.filter_by(name='Staff').first()
-        user.roles = [staff_role,]
         db.session.add(user)
         db.session.commit()
         flash(f'Account created for {form.name.data}! Now you can login.', 'success')
@@ -80,11 +89,14 @@ def branchRegister():
     form = BranchRegistrationForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        admin_branch = Branch.query.filter_by(name=form.branch.data).first()
+        admin_role = Role.query.filter_by(name='Admin').first()
         branch = User(name=form.name.data,
                       email=form.email.data,
-                      password=hashed_password)
-        admin_role = Role.query.filter_by(name='Admin').first()
-        branch.roles = [admin_role,]
+                      password=hashed_password,
+                      branches=admin_branch,
+                      role=admin_role
+                      )
         db.session.add(branch)
         db.session.commit()
         flash(f'Account created for {form.name.data}! Now you can login.', 'success')
@@ -151,14 +163,14 @@ def accountEdit():
         current_user.name = form.name.data
         current_user.email = form.email.data
         b = Branch.query.filter_by(name=form.branch.data).first()
-        current_user.branch = [b,]
+        current_user.branches = [b,]
         db.session.commit()
         flash('Your account has been updated!', 'success')
         return redirect(url_for('account'))
     elif request.method == 'GET':
         form.name.data = current_user.name
         form.email.data = current_user.email
-        form.branch.data = current_user.branch[0].name
+        form.branch.data = current_user.branches[0].name
     image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
     return render_template('account-edit.html',
                            dates=dates,
@@ -176,7 +188,7 @@ def productsAdd():
         if form.acceptable_extra_quantity.data is None:
             product = Product(name=form.name.data,
                               key=form.key.data,
-                              category=[c,],
+                              category=c,
                               oneday_shelf_life=form.oneday_shelf_life.data,
                               acceptable_waste_quantity=form.acceptable_waste_quantity.data,
                               acceptable_extra_quantity=0)
@@ -184,7 +196,7 @@ def productsAdd():
         elif form.acceptable_waste_quantity.data is None:
             product = Product(name=form.name.data,
                               key=form.key.data,
-                              category=[c,],
+                              category=c,
                               oneday_shelf_life=form.oneday_shelf_life.data,
                               acceptable_waste_quantity=0,
                               acceptable_extra_quantity=form.acceptable_extra_quantity.data)
@@ -245,7 +257,7 @@ def productEdit():
                            products_keys=products_keys,
                            products=products,
                            breakfast=breakfast,
-                           pastry=pastry,
+                           pastry=pastries,
                            lunch=lunch,
                            dates=dates,
                            image_file=image_file,
@@ -255,9 +267,18 @@ def productEdit():
 @app.route("/index")
 @login_required
 def index():
+    if current_user.is_authenticated:
+        current_branch_id = current_user.branches[0].id
+        b = Category.query.filter_by(name='Breakfast').first()
+        p = Category.query.filter_by(name='Pastries').first()
+        l = Category.query.filter_by(name='Lunch').first()
+        print(ProductBranch.product.category_id)
+        breakfast = ProductBranch.query.filter_by(branch_id=current_branch_id).filter_by(product_id=b.id).all()
+        pastries = ProductBranch.query.filter_by(branch_id=current_branch_id).filter_by(product_id=p.id).all()
+        lunch = ProductBranch.query.filter_by(branch_id=current_branch_id).filter_by(product_id=l.id).all()
     image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
     return render_template('index.html',
-                           pastry=pastry,
+                           pastry=pastries,
                            breakfast=breakfast,
                            lunch=lunch,
                            dates=dates,
