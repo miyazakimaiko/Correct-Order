@@ -14,7 +14,7 @@
 
 {% block date %}
     {% if dates[3] %}
-    <h5 class="m-0 sidebar-title">Order Recommendation for ({{ dates[3].day.capitalize() }}){{ dates[3].date }}</h5>
+    <h5 class="m-0 sidebar-title">Order Recommendation for ({{ dates[3].day.capitalize() }}){{ dates[3].date }} at {{ branch_name }}</h5>
     {% endif %}
 {% endblock date %}
 
