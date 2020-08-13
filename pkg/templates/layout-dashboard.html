@@ -78,7 +78,7 @@
                {% for p in pastry %}
                   <tr>
                      <td>{{ p.name }}</td>
-                     <td class="align-center"></td>
+                     <td class="align-center">{{ p.prediction_daily }}</td>
                      <td class="align-center">
                          <input id="{{ p.key }}" type="number" class="reminder-input"></td>
                      <td id="output-{{ p.key }}" class="align-center"></td>
@@ -92,7 +92,6 @@
              <h4 class="card-title mb-0">Breakfast <a class="float-right waves-effect waves-block waves-light profile-button" href="javascript:void(0);" data-target="breakfast-dropdown"><i class="material-icons">more_vert</i></a></h4>
               <ul class="dropdown-content" id="breakfast-dropdown">
                   <li><a class="grey-text text-darken-1" href="products-edit">Edit products</a></li>
-                  <li><a class="grey-text text-darken-1" href="products-add">Add products</a></li>
               </ul>
           </div>
           <table class="subscription-table striped">
@@ -108,7 +107,7 @@
                {% for b in breakfast %}
                   <tr>
                      <td>{{ b.name }}</td>
-                     <td class="align-center"></td>
+                     <td class="align-center">{{ b.prediction_daily }}</td>
                      <td class="align-center">
                          <input id="{{ b.key }}" type="number" class="reminder-input"></td>
                      <td id="output-{{ b.key }}" class="align-center"></td>
@@ -139,7 +138,7 @@
                {% for l in lunch %}
                   <tr>
                      <td>{{ l.name }}</td>
-                     <td class="align-center"></td>
+                     <td class="align-center">{{ l.prediction_daily }}</td>
                      <td class="align-center">
                          <input id="{{ l.key }}" type="number" class="reminder-input"></td>
                      <td id="output-{{ l.key }}" class="align-center"></td>
