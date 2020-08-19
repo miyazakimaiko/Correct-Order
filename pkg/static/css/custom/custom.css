@@ -73,3 +73,8 @@ input[type=number] {
     color: rgb(255, 64, 129);
     margin: 10px;
 }
+
+.text-normalize {
+    text-align: inherit !important;
+    text-transform: none !important;
+}
