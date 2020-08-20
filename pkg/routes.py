@@ -3,16 +3,15 @@ import secrets
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request
 from functools import wraps
-from .forms import UserRegistrationForm, BranchRegistrationForm, ProductRegistrationForm, LoginForm, UpdateAccountForm
+from .forms import UserRegistrationForm, BranchRegistrationForm, LoginForm, UpdateAccountForm
 from . import app, db, bcrypt, login_manager
-from .models import User, Role, Branch, Product, Category, ProductBranch
+from .models import User, Role, Branch, Category, ProductSAS, ProductHQ, ProductISFC, ProductPSL, ProductTCD
 from flask_user import roles_required
 from flask_login import login_user, logout_user, current_user
 from wtforms.form import BaseForm
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, BooleanField, IntegerField, FormField
 import datetime
-import calendar
 
 
 def login_required(f):
@@ -32,25 +31,9 @@ def load_user(user_id):
 roles = Role.query.all()
 branches = Branch.query.all()
 
-# if current_user.is_authenticated:
-#     current_branch = current_user.branches
-#     b = Category.query.filter_by(name='Breakfast').first()
-#     p = Category.query.filter_by(name='Pastries').first()
-#     l = Category.query.filter_by(name='Lunch').first()
-#     breakfast = ProductBranch.query.filter_by(branch_id=current_branch.id).filter_by(product_id=b.id).all()
-#     pastries = ProductBranch.query.filter_by(branch_id=current_branch.id).filter_by(product_id=p.id).all()
-#     lunch = ProductBranch.query.filter_by(branch_id=current_branch.id).filter_by(product_id=l.id).all()
-
-# b = Category.query.filter_by(name='Breakfast').first()
-# p = Category.query.filter_by(name='Pastries').first()
-# l = Category.query.filter_by(name='Lunch').first()
-# breakfast = Product.query.filter(Product.category == b).all()
-# pastry = Product.query.filter(Product.category == p).all()
-# lunch = Product.query.filter(Product.category == l).all()
-
 dates = []
 
-for i in range(7):
+for i in range(8):
     d = datetime.date.today() + datetime.timedelta(days=i)
     date = {'date': d.strftime("%d/%m/%y"),
             'day': d.strftime('%a')}
@@ -115,6 +98,7 @@ def userLogin():
         user = User.query.filter_by(email=form.email.data).first()
         if user is not None and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user, remember=form.remember.data)
+
             flash(f'Welcome back!', 'success')
             return redirect(url_for('index'))
         else:
@@ -179,37 +163,37 @@ def accountEdit():
                            form=form)
 
 
-@app.route("/products-add", methods=['GET', 'POST'])
-@roles_required('Admin')
-def productsAdd():
-    form = ProductRegistrationForm()
-    if form.validate_on_submit():
-        c = Category.query.filter_by(name=form.category.data).first()
-        if form.acceptable_extra_quantity.data is None:
-            product = Product(name=form.name.data,
-                              key=form.key.data,
-                              category=c,
-                              oneday_shelf_life=form.oneday_shelf_life.data,
-                              acceptable_waste_quantity=form.acceptable_waste_quantity.data,
-                              acceptable_extra_quantity=0)
-            db.session.add(product)
-        elif form.acceptable_waste_quantity.data is None:
-            product = Product(name=form.name.data,
-                              key=form.key.data,
-                              category=c,
-                              oneday_shelf_life=form.oneday_shelf_life.data,
-                              acceptable_waste_quantity=0,
-                              acceptable_extra_quantity=form.acceptable_extra_quantity.data)
-            db.session.add(product)
-        db.session.commit()
-        flash(f'Product {form.name.data} is successfully added!', 'success')
-        return redirect(url_for('productsAdd'))
-    image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-    return render_template('products-add.html',
-                           form=form,
-                           # items=items,
-                           dates=dates,
-                           image_file=image_file)
+# @app.route("/products-add", methods=['GET', 'POST'])
+# @roles_required('Admin')
+# def productsAdd():
+#     form = ProductRegistrationForm()
+#     if form.validate_on_submit():
+#         c = Category.query.filter_by(name=form.category.data).first()
+#         if form.acceptable_extra_quantity.data is None:
+#             product = Product(name=form.name.data,
+#                               key=form.key.data,
+#                               category=c,
+#                               oneday_shelf_life=form.oneday_shelf_life.data,
+#                               acceptable_waste_quantity=form.acceptable_waste_quantity.data,
+#                               acceptable_extra_quantity=0)
+#             db.session.add(product)
+#         elif form.acceptable_waste_quantity.data is None:
+#             product = Product(name=form.name.data,
+#                               key=form.key.data,
+#                               category=c,
+#                               oneday_shelf_life=form.oneday_shelf_life.data,
+#                               acceptable_waste_quantity=0,
+#                               acceptable_extra_quantity=form.acceptable_extra_quantity.data)
+#             db.session.add(product)
+#         db.session.commit()
+#         flash(f'Product {form.name.data} is successfully added!', 'success')
+#         return redirect(url_for('productsAdd'))
+#     image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
+#     return render_template('products-add.html',
+#                            form=form,
+#                            # items=items,
+#                            dates=dates,
+#                            image_file=image_file)
 
 
 @app.route("/products-edit", methods=['GET', 'POST'])
@@ -268,16 +252,26 @@ def productEdit():
 @login_required
 def index():
     if current_user.is_authenticated:
-        current_branch_id = current_user.branches[0].id
+        current_branch_name = current_user.branches[0].name
+        if current_branch_name == 'SAS':
+            product = ProductSAS
+        if current_branch_name == 'HQ':
+            product = ProductHQ
+        if current_branch_name == 'PSL':
+            product = ProductPSL
+        if current_branch_name == 'TCD':
+            product = ProductTCD
+        if current_branch_name == 'ISFC':
+            product = ProductISFC
         b = Category.query.filter_by(name='Breakfast').first()
         p = Category.query.filter_by(name='Pastries').first()
         l = Category.query.filter_by(name='Lunch').first()
-        print(ProductBranch.product.category_id)
-        breakfast = ProductBranch.query.filter_by(branch_id=current_branch_id).filter_by(product_id=b.id).all()
-        pastries = ProductBranch.query.filter_by(branch_id=current_branch_id).filter_by(product_id=p.id).all()
-        lunch = ProductBranch.query.filter_by(branch_id=current_branch_id).filter_by(product_id=l.id).all()
+        breakfast = product.query.filter_by(category_id=b.id).all()
+        pastries = product.query.filter_by(category_id=p.id).all()
+        lunch = product.query.filter_by(category_id=l.id).all()
     image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
     return render_template('index.html',
+                           branch_name=current_branch_name,
                            pastry=pastries,
                            breakfast=breakfast,
                            lunch=lunch,
@@ -286,67 +280,165 @@ def index():
                            image_file=image_file)
 
 
-# @app.route("/day0")
-# @login_required
-# def day0():
-#     image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-#     return render_template('day0.html',
-#                            dates=dates,
-#                            image_file=image_file)
-#
-#
-# @app.route("/day1")
-# @login_required
-# def day1():
-#     image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-#     return render_template('day1.html',
-#                            dates=dates,
-#                            image_file=image_file)
-#
-#
-# @app.route("/day2")
-# @login_required
-# def day2():
-#     image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-#     return render_template('day2.html',
-#                            dates=dates,
-#                            image_file=image_file)
-#
-#
-# @app.route("/day3")
-# @login_required
-# def day3():
-#     image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-#     return render_template('day3.html',
-#                            dates=dates,
-#                            image_file=image_file)
-#
-#
-# @app.route("/day4")
-# @login_required
-# def day4():
-#     image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-#     return render_template('day4.html',
-#                            dates=dates,
-#                            image_file=image_file)
-#
-#
-# @app.route("/day5")
-# @login_required
-# def day5():
-#     image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-#     return render_template('day5.html',
-#                            dates=dates,
-#                            image_file=image_file)
-#
-#
-# @app.route("/day6")
-# @login_required
-# def day6():
-#     image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-#     return render_template('day6.html',
-#                            dates=dates,
-#                            image_file=image_file)
+@app.route("/week0")
+@login_required
+def week0():
+    if current_user.is_authenticated:
+        current_branch_name = current_user.branches[0].name
+        if current_branch_name == 'SAS':
+            product = ProductSAS
+        if current_branch_name == 'HQ':
+            product = ProductHQ
+        if current_branch_name == 'PSL':
+            product = ProductPSL
+        if current_branch_name == 'TCD':
+            product = ProductTCD
+        if current_branch_name == 'ISFC':
+            product = ProductISFC
+        b = Category.query.filter_by(name='Breakfast').first()
+        p = Category.query.filter_by(name='Pastries').first()
+        l = Category.query.filter_by(name='Lunch').first()
+        breakfast = product.query.filter_by(category_id=b.id).all()
+        pastries = product.query.filter_by(category_id=p.id).all()
+        lunch = product.query.filter_by(category_id=l.id).all()
+    image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
+    return render_template('week0.html',
+                           branch_name=current_branch_name,
+                           pastry=pastries,
+                           breakfast=breakfast,
+                           lunch=lunch,
+                           dates=dates,
+                           weeks=weeks,
+                           image_file=image_file)
+
+
+@app.route("/week1")
+@login_required
+def week1():
+    if current_user.is_authenticated:
+        current_branch_name = current_user.branches[0].name
+        if current_branch_name == 'SAS':
+            product = ProductSAS
+        if current_branch_name == 'HQ':
+            product = ProductHQ
+        if current_branch_name == 'PSL':
+            product = ProductPSL
+        if current_branch_name == 'TCD':
+            product = ProductTCD
+        if current_branch_name == 'ISFC':
+            product = ProductISFC
+        b = Category.query.filter_by(name='Breakfast').first()
+        p = Category.query.filter_by(name='Pastries').first()
+        l = Category.query.filter_by(name='Lunch').first()
+        breakfast = product.query.filter_by(category_id=b.id).all()
+        pastries = product.query.filter_by(category_id=p.id).all()
+        lunch = product.query.filter_by(category_id=l.id).all()
+    image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
+    return render_template('week1.html',
+                           branch_name=current_branch_name,
+                           pastry=pastries,
+                           breakfast=breakfast,
+                           lunch=lunch,
+                           dates=dates,
+                           weeks=weeks,
+                           image_file=image_file)
+
+
+@app.route("/week2")
+@login_required
+def week2():
+    if current_user.is_authenticated:
+        current_branch_name = current_user.branches[0].name
+        if current_branch_name == 'SAS':
+            product = ProductSAS
+        if current_branch_name == 'HQ':
+            product = ProductHQ
+        if current_branch_name == 'PSL':
+            product = ProductPSL
+        if current_branch_name == 'TCD':
+            product = ProductTCD
+        if current_branch_name == 'ISFC':
+            product = ProductISFC
+        b = Category.query.filter_by(name='Breakfast').first()
+        p = Category.query.filter_by(name='Pastries').first()
+        l = Category.query.filter_by(name='Lunch').first()
+        breakfast = product.query.filter_by(category_id=b.id).all()
+        pastries = product.query.filter_by(category_id=p.id).all()
+        lunch = product.query.filter_by(category_id=l.id).all()
+    image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
+    return render_template('week2.html',
+                           branch_name=current_branch_name,
+                           pastry=pastries,
+                           breakfast=breakfast,
+                           lunch=lunch,
+                           dates=dates,
+                           weeks=weeks,
+                           image_file=image_file)
+
+
+@app.route("/week3")
+@login_required
+def week3():
+    if current_user.is_authenticated:
+        current_branch_name = current_user.branches[0].name
+        if current_branch_name == 'SAS':
+            product = ProductSAS
+        if current_branch_name == 'HQ':
+            product = ProductHQ
+        if current_branch_name == 'PSL':
+            product = ProductPSL
+        if current_branch_name == 'TCD':
+            product = ProductTCD
+        if current_branch_name == 'ISFC':
+            product = ProductISFC
+        b = Category.query.filter_by(name='Breakfast').first()
+        p = Category.query.filter_by(name='Pastries').first()
+        l = Category.query.filter_by(name='Lunch').first()
+        breakfast = product.query.filter_by(category_id=b.id).all()
+        pastries = product.query.filter_by(category_id=p.id).all()
+        lunch = product.query.filter_by(category_id=l.id).all()
+    image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
+    return render_template('week3.html',
+                           branch_name=current_branch_name,
+                           pastry=pastries,
+                           breakfast=breakfast,
+                           lunch=lunch,
+                           dates=dates,
+                           weeks=weeks,
+                           image_file=image_file)
+
+
+@app.route("/week4")
+@login_required
+def week4():
+    if current_user.is_authenticated:
+        current_branch_name = current_user.branches[0].name
+        if current_branch_name == 'SAS':
+            product = ProductSAS
+        if current_branch_name == 'HQ':
+            product = ProductHQ
+        if current_branch_name == 'PSL':
+            product = ProductPSL
+        if current_branch_name == 'TCD':
+            product = ProductTCD
+        if current_branch_name == 'ISFC':
+            product = ProductISFC
+        b = Category.query.filter_by(name='Breakfast').first()
+        p = Category.query.filter_by(name='Pastries').first()
+        l = Category.query.filter_by(name='Lunch').first()
+        breakfast = product.query.filter_by(category_id=b.id).all()
+        pastries = product.query.filter_by(category_id=p.id).all()
+        lunch = product.query.filter_by(category_id=l.id).all()
+    image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
+    return render_template('week4.html',
+                           branch_name=current_branch_name,
+                           pastry=pastries,
+                           breakfast=breakfast,
+                           lunch=lunch,
+                           dates=dates,
+                           weeks=weeks,
+                           image_file=image_file)
+
 
 @app.route("/page-faq")
 @login_required
