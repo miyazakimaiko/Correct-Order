@@ -1,17 +1,25 @@
 import os
 import secrets
 from PIL import Image
-from flask import render_template, url_for, flash, redirect, request
+from flask import render_template, url_for, flash, redirect, request, session
 from functools import wraps
 from .forms import UserRegistrationForm, BranchRegistrationForm, LoginForm, UpdateAccountForm
-from . import app, db, bcrypt, login_manager
+from . import app, db, bcrypt, login_manager, oauth
 from .models import User, Role, Branch, Category, ProductSAS, ProductHQ, ProductISFC, ProductPSL, ProductTCD
+from .talech_keys import grant_type, client_id, client_secret, client_version, token_url, refresh_token
 from flask_user import roles_required
 from flask_login import login_user, logout_user, current_user
 from wtforms.form import BaseForm
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, BooleanField, IntegerField, FormField
 import datetime
+from authlib.integrations.requests_client import OAuth2Session
+from flask.json import jsonify
+from authlib.oauth2.rfc7523 import ClientSecretJWT
+import oauth2
+import requests
+import time
+import pprint
 
 
 def login_required(f):
@@ -206,8 +214,21 @@ def productEdit():
             return form
         return create_form
 
+    if current_user.is_authenticated:
+        current_branch_name = current_user.branches[0].name
+        if current_branch_name == 'SAS':
+            product = ProductSAS
+        if current_branch_name == 'HQ':
+            product = ProductHQ
+        if current_branch_name == 'PSL':
+            product = ProductPSL
+        if current_branch_name == 'TCD':
+            product = ProductTCD
+        if current_branch_name == 'ISFC':
+            product = ProductISFC
+    products = product.query.all()
+
     class UpdateProductForm(FlaskForm):
-        products = Product.query.all()
         list_oneday_shelf_life = FormField(form_form_fields([(product.key,
                                                               BooleanField(product))
                                                              for product in products]))
@@ -220,7 +241,7 @@ def productEdit():
         submit = SubmitField('Update')
 
     form = UpdateProductForm()
-    products = Product.query.all()
+
     if form.validate_on_submit():
         for p in products:
             p.oneday_shelf_life = form.list_oneday_shelf_life[p.key].data
@@ -235,209 +256,80 @@ def productEdit():
             form.list_waste_quantity[p.key].data = p.acceptable_waste_quantity
             form.list_extra_quantity[p.key].data = p.acceptable_extra_quantity
 
+    b = Category.query.filter_by(name='Breakfast').first()
+    p = Category.query.filter_by(name='Pastries').first()
+    l = Category.query.filter_by(name='Lunch').first()
+    breakfast = product.query.filter_by(category=b).all()
+    pastry = product.query.filter_by(category=p).all()
+    lunch = product.query.filter_by(category=l).all()
+
     image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-    products_keys = Product.query.with_entities(Product.key).all()
+    products_keys = product.query.with_entities(product.key).all()
     return render_template('products-edit.html',
                            products_keys=products_keys,
                            products=products,
                            breakfast=breakfast,
-                           pastry=pastries,
+                           pastry=pastry,
                            lunch=lunch,
                            dates=dates,
                            image_file=image_file,
                            form=form)
 
 
-@app.route("/index")
+@app.route("/index", methods=["GET", "POST"])
 @login_required
 def index():
     if current_user.is_authenticated:
-        current_branch_name = current_user.branches[0].name
-        if current_branch_name == 'SAS':
-            product = ProductSAS
-        if current_branch_name == 'HQ':
-            product = ProductHQ
-        if current_branch_name == 'PSL':
-            product = ProductPSL
-        if current_branch_name == 'TCD':
-            product = ProductTCD
-        if current_branch_name == 'ISFC':
-            product = ProductISFC
-        b = Category.query.filter_by(name='Breakfast').first()
-        p = Category.query.filter_by(name='Pastries').first()
-        l = Category.query.filter_by(name='Lunch').first()
-        breakfast = product.query.filter_by(category_id=b.id).all()
-        pastries = product.query.filter_by(category_id=p.id).all()
-        lunch = product.query.filter_by(category_id=l.id).all()
-    image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-    return render_template('index.html',
-                           branch_name=current_branch_name,
-                           pastry=pastries,
-                           breakfast=breakfast,
-                           lunch=lunch,
-                           dates=dates,
-                           weeks=weeks,
-                           image_file=image_file)
+        data = {
+            'grant_type': grant_type,
+            'client_id': client_id,
+            'client_secret': client_secret,
+            'refresh_token': refresh_token,
+            'client_version': client_version
+        }
+        resp = requests.post(url=token_url,
+                             json=data)
+        resp_json = resp.json()
+        session['oauth_token'] = resp_json['access_token']
+        return redirect(url_for('.profile'))
+        # return jsonify(resp.json())
+    #     current_branch_name = current_user.branches[0].name
+    #     if current_branch_name == 'SAS':
+    #         product = ProductSAS
+    #     if current_branch_name == 'HQ':
+    #         product = ProductHQ
+    #     if current_branch_name == 'PSL':
+    #         product = ProductPSL
+    #     if current_branch_name == 'TCD':
+    #         product = ProductTCD
+    #     if current_branch_name == 'ISFC':
+    #         product = ProductISFC
+    # b = Category.query.filter_by(name='Breakfast').first()
+    # p = Category.query.filter_by(name='Pastries').first()
+    # l = Category.query.filter_by(name='Lunch').first()
+    # breakfast = product.query.filter_by(category_id=b.id).all()
+    # pastry = product.query.filter_by(category_id=p.id).all()
+    # lunch = product.query.filter_by(category_id=l.id).all()
+    # image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
+    # return render_template('index.html',
+    #                        branch_name=current_branch_name,
+    #                        pastry=pastry,
+    #                        breakfast=breakfast,
+    #                        lunch=lunch,
+    #                        dates=dates,
+    #                        weeks=weeks,
+    #                        image_file=image_file)
+    
 
-
-@app.route("/week0")
-@login_required
-def week0():
-    if current_user.is_authenticated:
-        current_branch_name = current_user.branches[0].name
-        if current_branch_name == 'SAS':
-            product = ProductSAS
-        if current_branch_name == 'HQ':
-            product = ProductHQ
-        if current_branch_name == 'PSL':
-            product = ProductPSL
-        if current_branch_name == 'TCD':
-            product = ProductTCD
-        if current_branch_name == 'ISFC':
-            product = ProductISFC
-        b = Category.query.filter_by(name='Breakfast').first()
-        p = Category.query.filter_by(name='Pastries').first()
-        l = Category.query.filter_by(name='Lunch').first()
-        breakfast = product.query.filter_by(category_id=b.id).all()
-        pastries = product.query.filter_by(category_id=p.id).all()
-        lunch = product.query.filter_by(category_id=l.id).all()
-    image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-    return render_template('week0.html',
-                           branch_name=current_branch_name,
-                           pastry=pastries,
-                           breakfast=breakfast,
-                           lunch=lunch,
-                           dates=dates,
-                           weeks=weeks,
-                           image_file=image_file)
-
-
-@app.route("/week1")
-@login_required
-def week1():
-    if current_user.is_authenticated:
-        current_branch_name = current_user.branches[0].name
-        if current_branch_name == 'SAS':
-            product = ProductSAS
-        if current_branch_name == 'HQ':
-            product = ProductHQ
-        if current_branch_name == 'PSL':
-            product = ProductPSL
-        if current_branch_name == 'TCD':
-            product = ProductTCD
-        if current_branch_name == 'ISFC':
-            product = ProductISFC
-        b = Category.query.filter_by(name='Breakfast').first()
-        p = Category.query.filter_by(name='Pastries').first()
-        l = Category.query.filter_by(name='Lunch').first()
-        breakfast = product.query.filter_by(category_id=b.id).all()
-        pastries = product.query.filter_by(category_id=p.id).all()
-        lunch = product.query.filter_by(category_id=l.id).all()
-    image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-    return render_template('week1.html',
-                           branch_name=current_branch_name,
-                           pastry=pastries,
-                           breakfast=breakfast,
-                           lunch=lunch,
-                           dates=dates,
-                           weeks=weeks,
-                           image_file=image_file)
-
-
-@app.route("/week2")
-@login_required
-def week2():
-    if current_user.is_authenticated:
-        current_branch_name = current_user.branches[0].name
-        if current_branch_name == 'SAS':
-            product = ProductSAS
-        if current_branch_name == 'HQ':
-            product = ProductHQ
-        if current_branch_name == 'PSL':
-            product = ProductPSL
-        if current_branch_name == 'TCD':
-            product = ProductTCD
-        if current_branch_name == 'ISFC':
-            product = ProductISFC
-        b = Category.query.filter_by(name='Breakfast').first()
-        p = Category.query.filter_by(name='Pastries').first()
-        l = Category.query.filter_by(name='Lunch').first()
-        breakfast = product.query.filter_by(category_id=b.id).all()
-        pastries = product.query.filter_by(category_id=p.id).all()
-        lunch = product.query.filter_by(category_id=l.id).all()
-    image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-    return render_template('week2.html',
-                           branch_name=current_branch_name,
-                           pastry=pastries,
-                           breakfast=breakfast,
-                           lunch=lunch,
-                           dates=dates,
-                           weeks=weeks,
-                           image_file=image_file)
-
-
-@app.route("/week3")
-@login_required
-def week3():
-    if current_user.is_authenticated:
-        current_branch_name = current_user.branches[0].name
-        if current_branch_name == 'SAS':
-            product = ProductSAS
-        if current_branch_name == 'HQ':
-            product = ProductHQ
-        if current_branch_name == 'PSL':
-            product = ProductPSL
-        if current_branch_name == 'TCD':
-            product = ProductTCD
-        if current_branch_name == 'ISFC':
-            product = ProductISFC
-        b = Category.query.filter_by(name='Breakfast').first()
-        p = Category.query.filter_by(name='Pastries').first()
-        l = Category.query.filter_by(name='Lunch').first()
-        breakfast = product.query.filter_by(category_id=b.id).all()
-        pastries = product.query.filter_by(category_id=p.id).all()
-        lunch = product.query.filter_by(category_id=l.id).all()
-    image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-    return render_template('week3.html',
-                           branch_name=current_branch_name,
-                           pastry=pastries,
-                           breakfast=breakfast,
-                           lunch=lunch,
-                           dates=dates,
-                           weeks=weeks,
-                           image_file=image_file)
-
-
-@app.route("/week4")
-@login_required
-def week4():
-    if current_user.is_authenticated:
-        current_branch_name = current_user.branches[0].name
-        if current_branch_name == 'SAS':
-            product = ProductSAS
-        if current_branch_name == 'HQ':
-            product = ProductHQ
-        if current_branch_name == 'PSL':
-            product = ProductPSL
-        if current_branch_name == 'TCD':
-            product = ProductTCD
-        if current_branch_name == 'ISFC':
-            product = ProductISFC
-        b = Category.query.filter_by(name='Breakfast').first()
-        p = Category.query.filter_by(name='Pastries').first()
-        l = Category.query.filter_by(name='Lunch').first()
-        breakfast = product.query.filter_by(category_id=b.id).all()
-        pastries = product.query.filter_by(category_id=p.id).all()
-        lunch = product.query.filter_by(category_id=l.id).all()
-    image_file = url_for('static', filename='images/avatar/' + current_user.image_file)
-    return render_template('week4.html',
-                           branch_name=current_branch_name,
-                           pastry=pastries,
-                           breakfast=breakfast,
-                           lunch=lunch,
-                           dates=dates,
-                           weeks=weeks,
-                           image_file=image_file)
+@app.route("/profile", methods=["GET", "POST"])
+def profile():
+    print(session['oauth_token'])
+    token = {
+        'securityToken': session['oauth_token']
+    }
+    storeInfo = requests.post(url='https://mapi-eu.talech.com/order/getorderhistory',
+                              headers=token)
+    return jsonify(storeInfo.json())
 
 
 @app.route("/page-faq")
