@@ -1,17 +1,8 @@
 from . import db, app, bcrypt
 from flask_user import UserMixin
 from flask_user import UserManager
-
-# user_roles = db.Table('user_roles',
-#                       db.Column(db.Integer, primary_key=True),
-#                       db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-#                       db.Column('role_id', db.Integer, db.ForeignKey('roles.id'), primary_key=True)
-#                       )
-
-# user_branch = db.Table('user_branch',
-#                        db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
-#                        db.Column('branch_id', db.Integer, db.ForeignKey('branch.id'), primary_key=True)
-#                        )
+from authlib.integrations.sqla_oauth2 import OAuth2ClientMixin, OAuth2TokenMixin
+from datetime import datetime, timedelta
 
 
 class User(db.Model, UserMixin):
@@ -38,8 +29,128 @@ class User(db.Model, UserMixin):
     branches = db.relationship("Branch",
                                secondary='user_branches')
 
+    def get_user_id(self):
+        return self.id
+
     def __repr__(self):
         return f"User('{self.name}', '{self.email}', '{self.branches}', '{self.image_file}')"
+
+
+        # client1 = Client(
+        #     user_id=u1.id,
+        #     client_id='myzkmik19922@gmail.com',
+        #     is_confidential=True,
+        #     client_secret='7Ac7YPNgcsgzxhiE',
+        #     _redirect_uris=(
+        #         'http://localhost:8000/authorized '
+        #         'http://localhost/authorized'
+        #     ),
+        # )
+
+
+# class Client(db.Model):
+#     # id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(
+#         db.Integer, db.ForeignKey('users.id', ondelete='CASCADE')
+#     )
+#     user = db.relationship('User')
+#     client_id = db.Column(db.String(40), primary_key=True)
+#     client_secret = db.Column(db.String(55), unique=True, index=True,
+#                               nullable=False)
+#
+#     # public or confidential
+#     is_confidential = db.Column(db.Boolean)
+#
+#     _redirect_uris = db.Column(db.Text)
+#     _default_scopes = db.Column(db.Text)
+#
+#     @property
+#     def client_type(self):
+#         if self.is_confidential:
+#             return 'confidential'
+#         return 'public'
+#
+#     @property
+#     def redirect_uris(self):
+#         if self._redirect_uris:
+#             return self._redirect_uris.split()
+#         return []
+#
+#     @property
+#     def default_redirect_uri(self):
+#         return self.redirect_uris[0]
+#
+#     @property
+#     def default_scopes(self):
+#         if self._default_scopes:
+#             return self._default_scopes.split()
+#         return []
+#
+#
+# class Grant(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#
+#     user_id = db.Column(
+#         db.Integer, db.ForeignKey('users.id', ondelete='CASCADE')
+#     )
+#     user = db.relationship('User')
+#
+#     client_id = db.Column(
+#         db.String(40), db.ForeignKey('client.client_id'),
+#         nullable=False,
+#     )
+#     client = db.relationship('Client')
+#
+#     code = db.Column(db.String(255), index=True, nullable=False)
+#
+#     redirect_uri = db.Column(db.String(255))
+#     expires = db.Column(db.DateTime)
+#
+#     _scopes = db.Column(db.Text)
+#
+#     def delete(self):
+#         db.session.delete(self)
+#         db.session.commit()
+#         return self
+#
+#     @property
+#     def scopes(self):
+#         if self._scopes:
+#             return self._scopes.split()
+#         return []
+#
+#
+# class Token(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     client_id = db.Column(
+#         db.String(40), db.ForeignKey('client.client_id'),
+#         nullable=False,
+#     )
+#     client = db.relationship('Client')
+#
+#     user_id = db.Column(
+#         db.Integer, db.ForeignKey('users.id')
+#     )
+#     user = db.relationship('User')
+#
+#     # currently only bearer is supported
+#     token_type = db.Column(db.String(40))
+#
+#     access_token = db.Column(db.String(255), unique=True)
+#     refresh_token = db.Column(db.String(255), unique=True)
+#     expires = db.Column(db.DateTime)
+#     _scopes = db.Column(db.Text)
+#
+#     def delete(self):
+#         db.session.delete(self)
+#         db.session.commit()
+#         return self
+#
+#     @property
+#     def scopes(self):
+#         if self._scopes:
+#             return self._scopes.split()
+#         return []
 
 
 class Role(db.Model):
@@ -48,9 +159,6 @@ class Role(db.Model):
                    primary_key=True)
     name = db.Column(db.String(50),
                      unique=True)
-    # users = db.relationship('User',
-    #                         back_populates="roles",
-    #                         lazy=True)
 
     def __repr__(self):
         return f"Role('{self.id}', '{self.name}')"
@@ -95,13 +203,82 @@ class UserBranch(db.Model):
 
 user_manager = UserManager(app, db, User)
 
-product_category = db.Table('categories',
-                            db.Column('product_id', db.Integer, db.ForeignKey('product.id'), primary_key=True),
-                            db.Column('category_id', db.Integer, db.ForeignKey('category.id'), primary_key=True)
-                            )
+product_sas_category = db.Table('categories_sas',
+                                db.Column('product_sas_id',
+                                          db.Integer,
+                                          db.ForeignKey('product_sas.id'),
+                                          primary_key=True),
+                                db.Column('category_id',
+                                          db.Integer,
+                                          db.ForeignKey('category.id'),
+                                          primary_key=True)
+                                )
+product_hq_category = db.Table('categories_hq',
+                               db.Column('product_hq_id',
+                                         db.Integer,
+                                         db.ForeignKey('product_hq.id'),
+                                         primary_key=True),
+                               db.Column('category_id',
+                                         db.Integer,
+                                         db.ForeignKey('category.id'),
+                                         primary_key=True)
+                               )
+product_psl_category = db.Table('categories_psl',
+                                db.Column('product_psl_id',
+                                          db.Integer,
+                                          db.ForeignKey('product_psl.id'),
+                                          primary_key=True),
+                                db.Column('category_id',
+                                          db.Integer,
+                                          db.ForeignKey('category.id'),
+                                          primary_key=True)
+                                )
+product_tcd_category = db.Table('categories_tcd',
+                                db.Column('product_tcd_id',
+                                          db.Integer,
+                                          db.ForeignKey('product_tcd.id'),
+                                          primary_key=True),
+                                db.Column('category_id',
+                                          db.Integer,
+                                          db.ForeignKey('category.id'),
+                                          primary_key=True)
+                                )
+product_isfc_category = db.Table('categories_isfc',
+                                 db.Column('product_isfc_id',
+                                           db.Integer,
+                                           db.ForeignKey('product_isfc.id'),
+                                           primary_key=True),
+                                 db.Column('category_id',
+                                           db.Integer,
+                                           db.ForeignKey('category.id'),
+                                           primary_key=True)
+                                 )
+
+prediction_daily_sas = db.Table('prediction_daily_sas',
+                                db.Column('product_id',
+                                          db.Integer,
+                                          db.ForeignKey('product_sas.id'),
+                                          primary_key=True),
+                                db.Column('prediction_id',
+                                          db.Integer,
+                                          db.ForeignKey('prediction_daily.id'),
+                                          primary_key=True)
+                                )
+
+prediction_weekly_sas = db.Table('prediction_weekly_sas',
+                                 db.Column('product_id',
+                                           db.Integer,
+                                           db.ForeignKey('product_sas.id'),
+                                           primary_key=True),
+                                 db.Column('prediction_id',
+                                           db.Integer,
+                                           db.ForeignKey('prediction_weekly.id'),
+                                           primary_key=True)
+                                 )
 
 
-class Product(db.Model):
+class ProductSAS(db.Model):
+    __tablename__ = 'product_sas'
     id = db.Column(db.Integer,
                    primary_key=True)
     name = db.Column(db.String(100),
@@ -112,39 +289,243 @@ class Product(db.Model):
     category_id = db.Column(db.Integer,
                             db.ForeignKey('category.id'))
     category = db.relationship("Category",
-                               back_populates="products")
-
-    product_branch = db.relationship('ProductBranch',
-                                     backref='ProductBranch.product_id',
-                                     primaryjoin='Product.id==ProductBranch.product_id',
-                                     lazy='dynamic')
-
-    def __repr__(self):
-        return f"Product('{self.id}', '{self.name}', '{self.key}', '{self.category_id}')"
-
-
-class ProductBranch(db.Model):
-    __tablename__ = 'product_branch'
-    id = db.Column(db.Integer(),
-                   primary_key=True)
-    product_id = db.Column(db.Integer,
-                           db.ForeignKey('product.id', ondelete='CASCADE'))
-    product = db.relationship('Product', foreign_keys='ProductBranch.product_id')
-    branch_id = db.Column(db.Integer,
-                          db.ForeignKey('branches.id', ondelete='CASCADE'))
+                               back_populates="products_sas")
     oneday_shelf_life = db.Column(db.Boolean,
                                   default=True)
     acceptable_waste_quantity = db.Column(db.Integer,
                                           default=1)
     acceptable_extra_quantity = db.Column(db.Integer,
                                           default=1)
-    prediction_daily = db.Column(db.Integer)
-    prediction_weekly = db.Column(db.Integer)
-    prediction_monthly = db.Column(db.Integer)
+    prediction_daily_id = db.Column(db.Integer,
+                                    db.ForeignKey('prediction_daily.id'))
+    prediction_daily = db.relationship("PredictionDaily",
+                                       back_populates="products_sas")
+    prediction_weekly_id = db.Column(db.Integer,
+                                     db.ForeignKey('prediction_weekly.id'))
+    prediction_weekly = db.relationship("PredictionWeekly",
+                                        back_populates="products_sas")
 
     def __repr__(self):
-        return f"ProductBranch(id:{self.id}, product_id:{self.product_id}, branch_id:{self.branch_id}, " \
-               f"prediction_daily:{self.prediction_daily}, prediction_weekly:{self.prediction_weekly}, prediction_monthly:{self.prediction_monthly})"
+        return f"Product(id:{self.id}, name:{self.name}," \
+               f" key:{self.key}, category_id:{self.category_id}, " \
+               f"prediction_daily:{self.prediction_daily}, " \
+               f"prediction_weekly:{self.prediction_daily})"
+
+
+class ProductHQ(db.Model):
+    __tablename__ = 'product_hq'
+    id = db.Column(db.Integer,
+                   primary_key=True)
+    name = db.Column(db.String(100),
+                     nullable=False)
+    key = db.Column(db.String(20),
+                    unique=True,
+                    nullable=False)
+    category_id = db.Column(db.Integer,
+                            db.ForeignKey('category.id'))
+    category = db.relationship("Category",
+                               back_populates="products_hq")
+    oneday_shelf_life = db.Column(db.Boolean,
+                                  default=True)
+    acceptable_waste_quantity = db.Column(db.Integer,
+                                          default=1)
+    acceptable_extra_quantity = db.Column(db.Integer,
+                                          default=1)
+    prediction_daily_id = db.Column(db.Integer,
+                                    db.ForeignKey('prediction_daily.id'))
+    prediction_daily = db.relationship("PredictionDaily",
+                                       back_populates="products_hq")
+    prediction_weekly_id = db.Column(db.Integer,
+                                     db.ForeignKey('prediction_weekly.id'))
+    prediction_weekly = db.relationship("PredictionWeekly",
+                                        back_populates="products_hq")
+
+    def __repr__(self):
+        return f"Product(id:{self.id}, name:{self.name}, " \
+               f"key:{self.key}, category_id:{self.category_id})"
+
+
+class ProductPSL(db.Model):
+    __tablename__ = 'product_psl'
+    id = db.Column(db.Integer,
+                   primary_key=True)
+    name = db.Column(db.String(100),
+                     nullable=False)
+    key = db.Column(db.String(20),
+                    unique=True,
+                    nullable=False)
+    category_id = db.Column(db.Integer,
+                            db.ForeignKey('category.id'))
+    category = db.relationship("Category",
+                               back_populates="products_psl")
+    oneday_shelf_life = db.Column(db.Boolean,
+                                  default=True)
+    acceptable_waste_quantity = db.Column(db.Integer,
+                                          default=1)
+    acceptable_extra_quantity = db.Column(db.Integer,
+                                          default=1)
+    prediction_daily_id = db.Column(db.Integer,
+                                    db.ForeignKey('prediction_daily.id'))
+    prediction_daily = db.relationship("PredictionDaily",
+                                       back_populates="products_psl")
+    prediction_weekly_id = db.Column(db.Integer,
+                                     db.ForeignKey('prediction_weekly.id'))
+    prediction_weekly = db.relationship("PredictionWeekly",
+                                        back_populates="products_psl")
+
+    def __repr__(self):
+        return f"Product(id:{self.id}, name:{self.name}, " \
+               f"key:{self.key}, category_id:{self.category_id})"
+
+
+class ProductTCD(db.Model):
+    __tablename__ = 'product_tcd'
+    id = db.Column(db.Integer,
+                   primary_key=True)
+    name = db.Column(db.String(100),
+                     nullable=False)
+    key = db.Column(db.String(20),
+                    unique=True,
+                    nullable=False)
+    category_id = db.Column(db.Integer,
+                            db.ForeignKey('category.id'))
+    category = db.relationship("Category",
+                               back_populates="products_tcd")
+    oneday_shelf_life = db.Column(db.Boolean,
+                                  default=True)
+    acceptable_waste_quantity = db.Column(db.Integer,
+                                          default=1)
+    acceptable_extra_quantity = db.Column(db.Integer,
+                                          default=1)
+    prediction_daily_id = db.Column(db.Integer,
+                                    db.ForeignKey('prediction_daily.id'))
+    prediction_daily = db.relationship("PredictionDaily",
+                                       back_populates="products_tcd")
+    prediction_weekly_id = db.Column(db.Integer,
+                                     db.ForeignKey('prediction_weekly.id'))
+    prediction_weekly = db.relationship("PredictionWeekly",
+                                        back_populates="products_tcd")
+
+    def __repr__(self):
+        return f"Product(id:{self.id}, name:{self.name}, " \
+               f"key:{self.key}, category_id:{self.category_id})"
+
+
+class ProductISFC(db.Model):
+    __tablename__ = 'product_isfc'
+    id = db.Column(db.Integer,
+                   primary_key=True)
+    name = db.Column(db.String(100),
+                     nullable=False)
+    key = db.Column(db.String(20),
+                    unique=True,
+                    nullable=False)
+    category_id = db.Column(db.Integer,
+                            db.ForeignKey('category.id'))
+    category = db.relationship("Category",
+                               back_populates="products_isfc")
+    oneday_shelf_life = db.Column(db.Boolean,
+                                  default=True)
+    acceptable_waste_quantity = db.Column(db.Integer,
+                                          default=1)
+    acceptable_extra_quantity = db.Column(db.Integer,
+                                          default=1)
+    prediction_daily_id = db.Column(db.Integer,
+                                    db.ForeignKey('prediction_daily.id'))
+    prediction_daily = db.relationship("PredictionDaily",
+                                       back_populates="products_isfc")
+    prediction_weekly_id = db.Column(db.Integer,
+                                     db.ForeignKey('prediction_weekly.id'))
+    prediction_weekly = db.relationship("PredictionWeekly",
+                                        back_populates="products_isfc")
+
+    def __repr__(self):
+        return f"Product(id:{self.id}, name:{self.name}, " \
+               f"key:{self.key}, category_id:{self.category_id})"
+
+
+class PredictionDaily(db.Model):
+    __tablename__ = 'prediction_daily'
+    id = db.Column(db.Integer,
+                   primary_key=True)
+    branch_id = db.Column(db.Integer,
+                          nullable=False)
+    product_id = db.Column(db.Integer,
+                           nullable=False)
+    day1 = db.Column(db.Integer,
+                     default=0)
+    day2 = db.Column(db.Integer,
+                     default=0)
+    day3 = db.Column(db.Integer,
+                     default=0)
+    day4 = db.Column(db.Integer,
+                     default=0)
+    day5 = db.Column(db.Integer,
+                     default=0)
+    day6 = db.Column(db.Integer,
+                     default=0)
+    day7 = db.Column(db.Integer,
+                     default=0)
+    products_sas = db.relationship('ProductSAS',
+                                   back_populates="prediction_daily",
+                                   lazy=True)
+    products_hq = db.relationship('ProductHQ',
+                                  back_populates="prediction_daily",
+                                  lazy=True)
+    products_psl = db.relationship('ProductPSL',
+                                   back_populates="prediction_daily",
+                                   lazy=True)
+    products_tcd = db.relationship('ProductTCD',
+                                   back_populates="prediction_daily",
+                                   lazy=True)
+    products_isfc = db.relationship('ProductISFC',
+                                    back_populates="prediction_daily",
+                                    lazy=True)
+
+    def __repr__(self):
+        return f"PredictionDaily(day1:{self.day1}, " \
+               f"day2:{self.day2}, day3:{self.day3}, day4:{self.day4}, " \
+               f"day5:{self.day5}, day6:{self.day6}, day7:{self.day7})"
+
+
+class PredictionWeekly(db.Model):
+    __tablename__ = 'prediction_weekly'
+    id = db.Column(db.Integer,
+                   primary_key=True)
+    branch_id = db.Column(db.Integer,
+                          nullable=False)
+    product_id = db.Column(db.Integer,
+                           nullable=False)
+    week0 = db.Column(db.Integer,
+                      default=0)
+    week1 = db.Column(db.Integer,
+                      default=0)
+    week2 = db.Column(db.Integer,
+                      default=0)
+    week3 = db.Column(db.Integer,
+                      default=0)
+    week4 = db.Column(db.Integer,
+                      default=0)
+    products_sas = db.relationship('ProductSAS',
+                                   back_populates="prediction_weekly",
+                                   lazy=True)
+    products_hq = db.relationship('ProductHQ',
+                                  back_populates="prediction_weekly",
+                                  lazy=True)
+    products_psl = db.relationship('ProductPSL',
+                                   back_populates="prediction_weekly",
+                                   lazy=True)
+    products_tcd = db.relationship('ProductTCD',
+                                   back_populates="prediction_weekly",
+                                   lazy=True)
+    products_isfc = db.relationship('ProductISFC',
+                                    back_populates="prediction_weekly",
+                                    lazy=True)
+
+    def __repr__(self):
+        return f"PredictionWeekly(week0:{self.week0}, " \
+               f"week1:{self.week1}, week2:{self.week2}, week3:{self.week3}, " \
+               f"week4:{self.week4})"
 
 
 class Category(db.Model):
@@ -152,70 +533,24 @@ class Category(db.Model):
                    primary_key=True)
     name = db.Column(db.String(50),
                      unique=True)
-    products = db.relationship('Product',
-                               back_populates="category",
-                               lazy=True)
+    products_sas = db.relationship('ProductSAS',
+                                   back_populates="category",
+                                   lazy=True)
+    products_hq = db.relationship('ProductHQ',
+                                  back_populates="category",
+                                  lazy=True)
+    products_psl = db.relationship('ProductPSL',
+                                   back_populates="category",
+                                   lazy=True)
+    products_tcd = db.relationship('ProductTCD',
+                                   back_populates="category",
+                                   lazy=True)
+    products_isfc = db.relationship('ProductISFC',
+                                    back_populates="category",
+                                    lazy=True)
 
     def __repr__(self):
-        return f"Category('{self.id}', '{self.name}', '{self.products}')"
-
-
-# class ProductCategory(db.Model):
-#     __tablename__ = 'product_category'
-#     id = db.Column(db.Integer(),
-#                    primary_key=True)
-#     product_id = db.Column(db.Integer,
-#                            db.ForeignKey('product.id', ondelete='CASCADE'))
-#     category_id = db.Column(db.Integer,
-#                             db.ForeignKey('category.id', ondelete='CASCADE'))
-
-
-# class PredictionDaily(db.Model):
-#     id = db.Column(db.Integer,
-#                    primary_key=True)
-#     product_branch_id = db.Column(db.Integer,
-#                                   db.ForeignKey('product_branch.id'), nullable=False)
-#     date = db.Column(db.DateTime,
-#                      nullable=False)
-#     category = db.Column(db.String,
-#                          nullable=False)
-#     sales_prediction = db.Column(db.Integer)
-#     day_count = db.Column(db.Integer)
-#
-#     def __repr__(self):
-#         return f"PredictionDaily('{self.id}', '{self.date}', '{self.sales_prediction}')"
-#
-#
-# class PredictionWeekly(db.Model):
-#     id = db.Column(db.Integer,
-#                    primary_key=True)
-#     product_branch_id = db.Column(db.Integer,
-#                                   db.ForeignKey('product_branch.id'), nullable=False)
-#     category = db.Column(db.String,
-#                          nullable=False)
-#     week = db.Column(db.Integer,
-#                      nullable=False)
-#     sales_prediction = db.Column(db.Integer)
-#     week_count = db.Column(db.Integer)
-#
-#     def __repr__(self):
-#         return f"PredictionWeekly('{self.id}', '{self.week}', '{self.sales_prediction}')"
-#
-#
-# class PredictionMonthly(db.Model):
-#     id = db.Column(db.Integer,
-#                    primary_key=True)
-#     product_branch_id = db.Column(db.Integer,
-#                                   db.ForeignKey('product_branch.id'), nullable=False)
-#     category = db.Column(db.String,
-#                          nullable=False)
-#     month = db.Column(db.Integer,
-#                       nullable=False)
-#     sales_prediction = db.Column(db.Integer)
-#     month_count = db.Column(db.Integer)
-#
-#     def __repr__(self):
-#         return f"PredictionMonthly('{self.id}', '{self.month}', '{self.sales_prediction}')"
+        return f"Category('{self.id}', '{self.name}')"
 
 
 def init_db():
@@ -250,27 +585,94 @@ def init_db():
         db.session.add(category3)
         db.session.commit()
 
-    if not User.query.filter(User.email == 'sample@coffeeangel.com').first():
+    if not User.query.filter(User.email == 'sas@coffeeangel.com').first():
         hashed_password = bcrypt.generate_password_hash('sample').decode('utf-8')
-        new_user = User(name='sample', email='sample@coffeeangel.com', password=hashed_password)
+        new_user = User(name='sas admin',
+                        email='sas@coffeeangel.com',
+                        password=hashed_password)
         new_user.roles.append(admin_role)
         new_user.branches.append(branch1)
         db.session.add(new_user)
         db.session.commit()
 
-    if Product.query.count() == 0:
-        p1 = Product(name='Mixberry Scone', key='BERRY-SCONE', category=category3)
-        p2 = Product(name='Plain Croissant', key='PLAIN-CROIS', category=category3)
-        p3 = Product(name='Pain Au Raisin', key='PAIN-RAIS', category=category3)
-        p4 = Product(name='Pain Au Chocolate', key='PAIN-CHOCO', category=category3)
-        p5 = Product(name='Sausage Roll', key='SAUSI-ROLL', category=category1)
-        p6 = Product(name='Ham Cheese Croissant', key='HAM-CROIS', category=category1)
-        p7 = Product(name='Granola Parfait', key='GRAN-PARF', category=category1)
-        p8 = Product(name='Chicken Chutney Wrap', key='CHICK-C-WRAP', category=category2)
-        p9 = Product(name='Caprese', key='CAPRESE', category=category2)
-        p10 = Product(name='Bacon Brie Bap', key='BAC-BRIE', category=category2)
-        p11 = Product(name='Ham Cheese Toastie', key='HAM-TOAST', category=category2)
-        p12 = Product(name='Vegan wrap', key='VEG-WRAP', category=category2)
+    if not User.query.filter(User.email == 'hq@coffeeangel.com').first():
+        hashed_password = bcrypt.generate_password_hash('sample').decode('utf-8')
+        new_user = User(name='hq admin',
+                        email='hq@coffeeangel.com',
+                        password=hashed_password)
+        new_user.roles.append(admin_role)
+        new_user.branches.append(branch5)
+        db.session.add(new_user)
+        db.session.commit()
+
+    if not User.query.filter(User.email == 'tcd@coffeeangel.com').first():
+        hashed_password = bcrypt.generate_password_hash('sample').decode('utf-8')
+        new_user = User(name='tcd admin',
+                        email='tcd@coffeeangel.com',
+                        password=hashed_password)
+        new_user.roles.append(admin_role)
+        new_user.branches.append(branch3)
+        db.session.add(new_user)
+        db.session.commit()
+
+    if not User.query.filter(User.email == 'psl@coffeeangel.com').first():
+        hashed_password = bcrypt.generate_password_hash('sample').decode('utf-8')
+        new_user = User(name='psl admin',
+                        email='psl@coffeeangel.com',
+                        password=hashed_password)
+        new_user.roles.append(admin_role)
+        new_user.branches.append(branch2)
+        db.session.add(new_user)
+        db.session.commit()
+
+    if not User.query.filter(User.email == 'isfc@coffeeangel.com').first():
+        hashed_password = bcrypt.generate_password_hash('sample').decode('utf-8')
+        new_user = User(name='isfc admin',
+                        email='isfc@coffeeangel.com',
+                        password=hashed_password)
+        new_user.roles.append(admin_role)
+        new_user.branches.append(branch4)
+        db.session.add(new_user)
+        db.session.commit()
+
+    if ProductSAS.query.count() == 0:
+        branch_sas = Branch.query.filter_by(name='SAS').first()
+        p1 = ProductSAS(name='Mixberry Scone',
+                        key='BERRY-SCONE',
+                        category=category3)
+        p2 = ProductSAS(name='Plain Croissant',
+                        key='PLAIN-CROIS',
+                        category=category3)
+        p3 = ProductSAS(name='Pain Au Raisin',
+                        key='PAIN-RAIS',
+                        category=category3)
+        p4 = ProductSAS(name='Pain Au Chocolate',
+                        key='PAIN-CHOCO',
+                        category=category3)
+        p5 = ProductSAS(name='Sausage Roll',
+                        key='SAUSI-ROLL',
+                        category=category1)
+        p6 = ProductSAS(name='Ham Cheese Croissant',
+                        key='HAM-CROIS',
+                        category=category1)
+        p7 = ProductSAS(name='Granola Parfait',
+                        key='GRAN-PARF',
+                        category=category1)
+        p8 = ProductSAS(name='Chicken Chutney Wrap',
+                        key='CHICK-C-WRAP',
+                        category=category2)
+        p9 = ProductSAS(name='Caprese',
+                        key='CAPRESE',
+                        category=category2)
+        p10 = ProductSAS(name='Bacon Brie Bap',
+                         key='BAC-BRIE',
+                         category=category2)
+        p11 = ProductSAS(name='Ham Cheese Toastie',
+                         key='HAM-TOAST',
+                         category=category2)
+        p12 = ProductSAS(name='Vegan wrap',
+                         key='VEG-WRAP',
+                         category=category2)
         db.session.add(p1)
         db.session.add(p2)
         db.session.add(p3)
@@ -284,58 +686,64 @@ def init_db():
         db.session.add(p11)
         db.session.add(p12)
         db.session.commit()
-
-    if ProductBranch.query.count() == 0:
-        branch1 = Branch.query.filter(Branch.name == 'SAS').first()
-        scone = Product.query.filter(Product.name == 'Mixberry Scone').first()
-        crois = Product.query.filter(Product.name == 'Plain Croissant').first()
-        raisin = Product.query.filter(Product.name == 'Pain Au Raisin').first()
-        sausi = Product.query.filter(Product.name == 'Sausage Roll').first()
-        hamcrois = Product.query.filter(Product.name == 'Ham Cheese Croissant').first()
-        parfait = Product.query.filter(Product.name == 'Granola Parfait').first()
-        chicken = Product.query.filter(Product.name == 'Chicken Chutney Wrap').first()
-        caprese = Product.query.filter(Product.name == 'Caprese').first()
-        bacon = Product.query.filter(Product.name == 'Bacon Brie Bap').first()
-        toastie = Product.query.filter(Product.name == 'Ham Cheese Toastie').first()
-        vegan = Product.query.filter(Product.name == 'Vegan wrap').first()
-        choco = Product.query.filter(Product.name == 'Pain Au Chocolate').first()
-        pb1 = ProductBranch(product_id=scone.id, branch_id=branch1.id, prediction_daily=10,
-                            prediction_weekly=65, prediction_monthly=250)
-        pb2 = ProductBranch(product_id=crois.id, branch_id=branch1.id, prediction_daily=8,
-                            prediction_weekly=50, prediction_monthly=200)
-        pb3 = ProductBranch(product_id=raisin.id, branch_id=branch1.id, prediction_daily=8,
-                            prediction_weekly=50, prediction_monthly=200)
-        pb4 = ProductBranch(product_id=sausi.id, branch_id=branch1.id, prediction_daily=5,
-                            prediction_weekly=30, prediction_monthly=120)
-        pb5 = ProductBranch(product_id=hamcrois.id, branch_id=branch1.id, prediction_daily=5,
-                            prediction_weekly=30, prediction_monthly=120)
-        pb6 = ProductBranch(product_id=parfait.id, branch_id=branch1.id, prediction_daily=3,
-                            prediction_weekly=20, prediction_monthly=80)
-        pb7 = ProductBranch(product_id=chicken.id, branch_id=branch1.id, prediction_daily=4,
-                            prediction_weekly=24, prediction_monthly=90)
-        pb8 = ProductBranch(product_id=caprese.id, branch_id=branch1.id, prediction_daily=2,
-                            prediction_weekly=12, prediction_monthly=50)
-        pb9 = ProductBranch(product_id=bacon.id, branch_id=branch1.id, prediction_daily=4,
-                            prediction_weekly=24, prediction_monthly=90)
-        pb10 = ProductBranch(product_id=toastie.id, branch_id=branch1.id, prediction_daily=3,
-                             prediction_weekly=18, prediction_monthly=55)
-        pb11 = ProductBranch(product_id=vegan.id, branch_id=branch1.id, prediction_daily=2,
-                             prediction_weekly=12, prediction_monthly=50)
-        pb12 = ProductBranch(product_id=choco.id, branch_id=branch1.id, prediction_daily=8,
-                             prediction_weekly=50, prediction_monthly=200)
-        db.session.add(pb1)
-        db.session.add(pb2)
-        db.session.add(pb3)
-        db.session.add(pb4)
-        db.session.add(pb5)
-        db.session.add(pb6)
-        db.session.add(pb7)
-        db.session.add(pb8)
-        db.session.add(pb9)
-        db.session.add(pb10)
-        db.session.add(pb11)
-        db.session.add(pb12)
+        pd1 = PredictionDaily(branch_id=branch_sas.id, product_id=p1.id)
+        pd2 = PredictionDaily(branch_id=branch_sas.id, product_id=p2.id)
+        pd3 = PredictionDaily(branch_id=branch_sas.id, product_id=p3.id)
+        pd4 = PredictionDaily(branch_id=branch_sas.id, product_id=p4.id)
+        pd5 = PredictionDaily(branch_id=branch_sas.id, product_id=p5.id)
+        pd6 = PredictionDaily(branch_id=branch_sas.id, product_id=p6.id)
+        pd7 = PredictionDaily(branch_id=branch_sas.id, product_id=p7.id)
+        pd8 = PredictionDaily(branch_id=branch_sas.id, product_id=p8.id)
+        pd9 = PredictionDaily(branch_id=branch_sas.id, product_id=p9.id)
+        pd10 = PredictionDaily(branch_id=branch_sas.id, product_id=p10.id)
+        pd11 = PredictionDaily(branch_id=branch_sas.id, product_id=p11.id)
+        pd12 = PredictionDaily(branch_id=branch_sas.id, product_id=p12.id)
+        p1.prediction_daily = pd1
+        p2.prediction_daily = pd2
+        p3.prediction_daily = pd3
+        p4.prediction_daily = pd4
+        p5.prediction_daily = pd5
+        p6.prediction_daily = pd6
+        p7.prediction_daily = pd7
+        p8.prediction_daily = pd8
+        p9.prediction_daily = pd9
+        p10.prediction_daily = pd10
+        p11.prediction_daily = pd11
+        p12.prediction_daily = pd12
         db.session.commit()
+
+    # if Client.query.count() == 0:
+    #     u1 = User.query.filter_by(name='sas admin').first()
+    #     client1 = Client(
+    #         user_id=u1.id,
+    #         client_id='myzkmik19922@gmail.com',
+    #         is_confidential=True,
+    #         client_secret='7Ac7YPNgcsgzxhiE',
+    #         _redirect_uris=(
+    #             'http://localhost:8000/authorized '
+    #             'http://localhost/authorized'
+    #         ),
+    #     )
+    #     db.session.add(client1)
+    #     db.session.commit()
+    #
+    # if Grant.query.count() == 0:
+    #     temp_grant = Grant(
+    #         user_id=1,
+    #         client_id='myzkmik19922@gmail.com',
+    #         code='12345',
+    #         expires=datetime.utcnow() + timedelta(seconds=100)
+    #     )
+    #     db.session.add(temp_grant)
+    #     db.session.commit()
+    #
+    # if Token.query.count() == 0:
+    #     access_token = Token(
+    #         user_id=1, client_id='myzkmik19922@gmail.com',
+    #         refresh_token='36446748/QX35Y7TCypuuZtgcAvWPAbUN'
+    #     )
+    #     db.session.add(access_token)
+    #     db.session.commit()
 
 
 init_db()
