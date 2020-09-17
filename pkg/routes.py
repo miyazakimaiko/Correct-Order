@@ -6,7 +6,8 @@ from functools import wraps
 from .forms import UserRegistrationForm, BranchRegistrationForm, LoginForm, UpdateAccountForm
 from . import app, db, bcrypt, login_manager, oauth
 from .models import User, Role, Branch, Category, ProductSAS, ProductHQ, ProductISFC, ProductPSL, ProductTCD
-from .talech_keys import grant_type, client_id, client_secret, client_version, token_url, refresh_token
+from .talech_keys import grant_type, client_id_1, client_id_2, client_secret_1, client_secret_2, \
+    client_version, token_url, refresh_token_1, refresh_token_2, ID_HQ, ID_IFSC, ID_PSL, ID_SAS, ID_TCD
 from flask_user import roles_required
 from flask_login import login_user, logout_user, current_user
 from wtforms.form import BaseForm
@@ -15,6 +16,7 @@ from wtforms import SubmitField, BooleanField, IntegerField, FormField
 import datetime
 from authlib.integrations.requests_client import OAuth2Session
 from flask.json import jsonify
+import json
 from authlib.oauth2.rfc7523 import ClientSecretJWT
 import oauth2
 import requests
@@ -282,16 +284,16 @@ def index():
     if current_user.is_authenticated:
         data = {
             'grant_type': grant_type,
-            'client_id': client_id,
-            'client_secret': client_secret,
-            'refresh_token': refresh_token,
+            'client_id': client_id_1,
+            'client_secret': client_secret_1,
+            'refresh_token': refresh_token_1,
             'client_version': client_version
         }
         resp = requests.post(url=token_url,
                              json=data)
         resp_json = resp.json()
         session['oauth_token'] = resp_json['access_token']
-        return redirect(url_for('.profile'))
+        return redirect(url_for('.allitems'))
         # return jsonify(resp.json())
     #     current_branch_name = current_user.branches[0].name
     #     if current_branch_name == 'SAS':
@@ -319,17 +321,178 @@ def index():
     #                        dates=dates,
     #                        weeks=weeks,
     #                        image_file=image_file)
-    
+
+
+# def addup_same_items(obj, items):
+#
+
+# def json_extract_setmenu(obj):
+#     arr = []
+#
+#     def extract(obj, arr):
+#         """Recursively search for values of key in JSON tree."""
+#         if isinstance(obj, dict):
+#             for k, v in obj.items():
+#                 if k == 'name' and v == 'Soup & Sandwich':
+#                     arr.append(obj)
+#                 elif k == 'items':
+#                     extract(v, arr)
+#                 elif k == 'productVariants':
+#                     extract(v, arr)
+#
+#         elif isinstance(obj, list):
+#             for item in obj:
+#                 extract(item, arr)
+#         return arr
+#
+#     values = extract(obj, arr)
+#     return values
+
+
+def json_extract_itemkeys(obj):
+    """Recursively fetch values from nested JSON."""
+    arr = {}
+    bundleditems = {}
+    itemname = 'No name'
+    itemkey = 'no-key'
+    itemlabel = 'no-label'
+    category = 'no-category'
+
+    def extractLabel(obj):
+        l = 'no-label'
+        for item in obj:
+            for k, v in item.items():
+                if k == 'label' and v != 'Tall' and v != 'Reg' \
+                        and v != 'To Go' and v != 'Sit In' \
+                        and v != 'Heated' and v != 'Not Heated':
+                    l = v
+        return l
+
+    def extract(obj, arr, itemname, itemkey, itemlabel, category):
+        """Recursively search for values of key in JSON tree."""
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if k == 'items':
+                    extract(v, arr, itemname, itemkey, itemlabel, category)
+                elif k == 'productVariants':
+                    extract(v, arr, itemname, itemkey, itemlabel, category)
+                elif k == 'modifierOptions':
+                    # this get null
+                    itemlabel = extractLabel(v)
+                elif k == 'skuNumber':
+                    itemkey = v
+                elif k == 'name':
+                    itemname = v
+                elif k == 'categoryType':
+                    category = v
+                arr[itemkey] = {'name': itemname, 'label': itemlabel, 'category': category}
+
+        elif isinstance(obj, list):
+            for item in obj:
+                extract(item, arr, itemname, itemkey, itemlabel, category)
+        return arr
+
+    def bundle_sameitems(obj, bundleditems):
+        lunchitemkey = None
+        lunchitemname = None
+        for key, val in obj.items():
+            for k, v in val.items():
+                if k == 'category' and v == 'LUNCH':
+                    print(val)
+                    lunchitemkey = key
+                if k == 'name':
+                    lunchitemname = v
+
+            if lunchitemkey != None:
+                try:
+                    bundleditems[lunchitemname].append(lunchitemkey)
+                except:
+                    bundleditems[lunchitemname] = [lunchitemkey]
+                lunchitemkey = None
+                lunchitemname = None
+
+        return bundleditems
+
+    values = extract(obj, arr, itemname, itemkey, itemlabel, category)
+    bundled = bundle_sameitems(values, bundleditems)
+    return bundled
+
+
+@app.route("/allitems", methods=["GET", "POST"])
+def allitems():
+    token = {
+        'securityToken': session['oauth_token'],
+        'X-POS-MerchantId': ID_SAS
+    }
+    data = {
+        'searchCriteria': {
+            'offset': 0,
+            'inventoryOnly': False
+        }
+    }
+    result = requests.post(url='https://mapi-eu.talech.com/managemenu/menuitem/allmenuitems',
+                           json=data,
+                           headers=token)
+    items = result.json()
+    result = json_extract_itemkeys(items)
+    # result = json_extract_setmenu(items)
+    return jsonify(result)
+
+
+def json_extract(obj, name, key, value):
+    """Recursively fetch values from nested JSON."""
+    arr = {}
+    itemname = 'No name'
+    itemkey = 'no-key'
+    itemvalue = 0
+
+    def extract(obj, arr, itemname, itemkey, itemvalue, name, key, value):
+        """Recursively search for values of key in JSON tree."""
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if isinstance(v, (dict, list)):
+                    extract(v, arr, itemname, itemkey, itemvalue, name, key, value)
+                elif k == name:
+                    itemname = v
+                elif k == key:
+                    itemkey = v
+                elif k == value:
+                    itemvalue = v
+                arr[itemname] = {key: itemkey, value: itemvalue}
+
+        elif isinstance(obj, list):
+            for item in obj:
+                extract(item, arr, itemname, itemkey, itemvalue, name, key, value)
+        return arr
+
+    values = extract(obj, arr, itemname, itemkey, itemvalue, name, key, value)
+    return values
+
 
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
-    print(session['oauth_token'])
     token = {
-        'securityToken': session['oauth_token']
+        'securityToken': session['oauth_token'],
+        'X-POS-MerchantId': ID_SAS
     }
-    storeInfo = requests.post(url='https://mapi-eu.talech.com/order/getorderhistory',
-                              headers=token)
-    return jsonify(storeInfo.json())
+    data = {
+        'searchCriteria': {
+            'startDate': "09/01/2020 00:00:00",
+            'endDate': "09/02/2020 00:00:00",
+            'includeShiftsData': True,
+            'includedReports': [102]
+        }
+    }
+    result = requests.post(url='https://mapi-eu.talech.com/reports/receiptssummaryreport',
+                           json=data,
+                           headers=token)
+    items = result.json()
+    name = 'productName'
+    key = 'item'
+    value = 'soldQuantity'
+    salesdata = json_extract(items, name, key, value)
+    # print(salesdata['Ham & Cheese Toastie + To Go, Heated']['item'])
+    return jsonify(salesdata)
 
 
 @app.route("/page-faq")
