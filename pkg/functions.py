@@ -1,4 +1,45 @@
-def jsonGetFoodItemkeys(obj):
+import datetime
+
+
+def get_last_7days():
+    lastweek = []
+
+    for i in range(-7, 1, 1):
+        d = datetime.date.today() + datetime.timedelta(days=i)
+        lastweek.append(d.strftime("%m/%d/%Y 00:00:00"))
+    return lastweek
+
+
+def get_recent_week_nums():
+    weeks = []
+    for i in range(1, 36, 7):
+        w = datetime.date.today() + datetime.timedelta(days=i)
+        week = w.strftime("%V")
+        weeks.append(week)
+    return weeks
+
+
+import os
+import secrets
+from PIL import Image
+from . import app
+
+
+def save_picture(form_picture):
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext
+    picture_path = os.path.join(app.root_path, 'static/images/avatar', picture_fn)
+
+    output_size = (125, 125)
+    i = Image.open(form_picture)
+    i.thumbnail(output_size)
+    i.save(picture_path)
+
+    return picture_fn
+
+
+def json_get_fooditem_keys(obj):
     """Recursively fetch values from nested JSON and extract item name and key"""
     arr = {}
     itemname = 'No name'
@@ -44,14 +85,14 @@ def jsonGetFoodItemkeys(obj):
                 extract(item, arr, itemname, itemkey, itemlabel, category)
         return arr
 
-    def bundleSameItems(obj, category):
+    def bundle_same_items(obj, category):
         """extract keys of items which belong to specific category"""
         arr = {}
         itemkey = None
         itemname = None
         itemlabel = None
 
-        def getSimilarString(str1, str2):
+        def get_similar_string(str1, str2):
             """if str2 contains str1, return str2.
             This return str2 even words' order doesn't match"""
             count = 0
@@ -84,27 +125,27 @@ def jsonGetFoodItemkeys(obj):
                     else:
                         pass
 
-            if itemname:
+            if itemname and itemkey:
                 try:
                     for key, value in arr.items():
-                        name = getSimilarString(itemname, key)
+                        name = get_similar_string(itemname, key)
                         if name:
                             k = name
                             break
-                    arr[k][itemkey] = 0
+                    arr[k].append(itemkey)
                 except:
-                    arr[itemname] = {itemkey: 0}
+                    arr[itemname] = [itemkey]
 
-            elif itemlabel:
+            elif itemlabel and itemkey:
                 try:
                      for key, value in arr.items():
-                         name = getSimilarString(itemlabel, key)
+                         name = get_similar_string(itemlabel, key)
                          if name:
                              k = name
                              break
-                     arr[k][itemkey] = 0
+                     arr[k].append(itemkey)
                 except:
-                    arr[itemlabel] = {itemkey: 0}
+                    arr[itemlabel] = [itemkey]
 
             itemkey = None
             itemname = None
@@ -113,38 +154,98 @@ def jsonGetFoodItemkeys(obj):
         return arr
 
     values = extract(obj, arr, itemname, itemkey, itemlabel, category)
-    lunch = bundleSameItems(values, 'LUNCH')
-    baked = bundleSameItems(values, 'BAKED GOODS')
-    breakfast = bundleSameItems(values, 'BREAKFAST')
+    lunch = bundle_same_items(values, 'LUNCH')
+    baked = bundle_same_items(values, 'BAKED GOODS')
+    breakfast = bundle_same_items(values, 'BREAKFAST')
     bundled = {'LUNCH': lunch, 'BAKED GOODS': baked, 'BREAKFAST': breakfast}
     return bundled
 
 
-def jsonGetSalesCount(obj, name, key, value):
+def json_get_sales_count(obj):
     """Recursively fetch values from nested JSON."""
-    arr = {}
-    itemname = 'No name'
-    itemkey = 'no-key'
-    itemvalue = 0
+    arr = {'BAKED GOODS': {}, 'BREAKFAST': {}, 'LUNCH': {}}
+    itemkey = None
+    itemvalue = None
+    categoryname = None
 
-    def extract(obj, arr, itemname, itemkey, itemvalue, name, key, value):
+    def extract(obj, arr, itemkey, itemvalue, categoryname):
         """Recursively search for values of key in JSON tree."""
         if isinstance(obj, dict):
             for k, v in obj.items():
                 if isinstance(v, (dict, list)):
-                    extract(v, arr, itemname, itemkey, itemvalue, name, key, value)
-                elif k == name:
-                    itemname = v
-                elif k == key:
+                    extract(v, arr, itemkey, itemvalue, categoryname)
+                elif k == 'item':
                     itemkey = v
-                elif k == value:
+                elif k == 'soldQuantity':
                     itemvalue = v
-                arr[itemname] = {key: itemkey, value: itemvalue}
+                elif k == 'categoryName':
+                    if v == 'LUNCH' or v == 'BREAKFAST' or v == 'BAKED GOODS':
+                        categoryname = v
+
+                if categoryname and itemkey and itemvalue:
+                    arr[categoryname][itemkey] = itemvalue
+                    itemkey = None
+                    itemvalue = None
+                    categoryname = None
 
         elif isinstance(obj, list):
             for item in obj:
-                extract(item, arr, itemname, itemkey, itemvalue, name, key, value)
+                extract(item, arr, itemkey, itemvalue, categoryname)
         return arr
 
-    values = extract(obj, arr, itemname, itemkey, itemvalue, name, key, value)
+    values = extract(obj, arr, itemkey, itemvalue, categoryname)
     return values
+
+
+def merge_data(salesdata, itemdata):
+    arr = {}
+
+    for date, dailysale in salesdata.items():
+        """Create empty ditionaries for each date which contain sorted item keys"""
+        arr[date] = {}
+        for category, items in itemdata.items():
+            arr[date][category] = {}
+            for itemname, itemkeys in items.items():
+                arr[date][category][itemname] = {}
+                mainkey = None
+                subkeys = []
+                for key in itemkeys:
+                    if mainkey is None or len(mainkey) > len(key):
+                        mainkey = key
+                    else:
+                        subkeys.append(key)
+
+                if mainkey:
+                    arr[date][category][itemname][mainkey] = subkeys
+                    arr[date][category][itemname]['sold'] = 0
+
+        for soldcategory, solditems in dailysale.items():
+            """Find the matching keys in the array which was created earlier,
+            and save sales quantity in the array"""
+            for soldkey, soldnum in solditems.items():
+                for soldname, soldkeys in arr[date][soldcategory].items():
+                    for parentkey, subkeys in soldkeys.items():
+                        if parentkey == soldkey:
+                            arr[date][soldcategory][soldname]['sold'] += soldnum
+                        elif isinstance(subkeys, list):
+                            for key in subkeys:
+                                if key == soldkey:
+                                    arr[date][soldcategory][soldname]['sold'] += soldnum
+                                    # arr[date][soldcategory][soldname][parentkey] += soldnum
+
+        # def addUpSameItems(array):
+        #     name = None
+        #     total = 0
+        #     for date, dailysale in array.items():
+        #         for category, solditems in dailysale.items():
+        #             for itemname, itemkeys in solditems.items():
+        #                 for itemkey, soldnum in itemkeys.items():
+        #                     if name is None:
+        #                         name = itemkey
+        #                     total += soldnum
+        #                 array[date][category][itemname][name] = total
+        #                 total = 0
+        #                 name = None
+        #
+        # addUpSameItems(arr)
+    return arr
