@@ -36,123 +36,6 @@ class User(db.Model, UserMixin):
         return f"User('{self.name}', '{self.email}', '{self.branches}', '{self.image_file}')"
 
 
-        # client1 = Client(
-        #     user_id=u1.id,
-        #     client_id='myzkmik19922@gmail.com',
-        #     is_confidential=True,
-        #     client_secret='7Ac7YPNgcsgzxhiE',
-        #     _redirect_uris=(
-        #         'http://localhost:8000/authorized '
-        #         'http://localhost/authorized'
-        #     ),
-        # )
-
-
-# class Client(db.Model):
-#     # id = db.Column(db.Integer, primary_key=True)
-#     user_id = db.Column(
-#         db.Integer, db.ForeignKey('users.id', ondelete='CASCADE')
-#     )
-#     user = db.relationship('User')
-#     client_id = db.Column(db.String(40), primary_key=True)
-#     client_secret = db.Column(db.String(55), unique=True, index=True,
-#                               nullable=False)
-#
-#     # public or confidential
-#     is_confidential = db.Column(db.Boolean)
-#
-#     _redirect_uris = db.Column(db.Text)
-#     _default_scopes = db.Column(db.Text)
-#
-#     @property
-#     def client_type(self):
-#         if self.is_confidential:
-#             return 'confidential'
-#         return 'public'
-#
-#     @property
-#     def redirect_uris(self):
-#         if self._redirect_uris:
-#             return self._redirect_uris.split()
-#         return []
-#
-#     @property
-#     def default_redirect_uri(self):
-#         return self.redirect_uris[0]
-#
-#     @property
-#     def default_scopes(self):
-#         if self._default_scopes:
-#             return self._default_scopes.split()
-#         return []
-#
-#
-# class Grant(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#
-#     user_id = db.Column(
-#         db.Integer, db.ForeignKey('users.id', ondelete='CASCADE')
-#     )
-#     user = db.relationship('User')
-#
-#     client_id = db.Column(
-#         db.String(40), db.ForeignKey('client.client_id'),
-#         nullable=False,
-#     )
-#     client = db.relationship('Client')
-#
-#     code = db.Column(db.String(255), index=True, nullable=False)
-#
-#     redirect_uri = db.Column(db.String(255))
-#     expires = db.Column(db.DateTime)
-#
-#     _scopes = db.Column(db.Text)
-#
-#     def delete(self):
-#         db.session.delete(self)
-#         db.session.commit()
-#         return self
-#
-#     @property
-#     def scopes(self):
-#         if self._scopes:
-#             return self._scopes.split()
-#         return []
-#
-#
-# class Token(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     client_id = db.Column(
-#         db.String(40), db.ForeignKey('client.client_id'),
-#         nullable=False,
-#     )
-#     client = db.relationship('Client')
-#
-#     user_id = db.Column(
-#         db.Integer, db.ForeignKey('users.id')
-#     )
-#     user = db.relationship('User')
-#
-#     # currently only bearer is supported
-#     token_type = db.Column(db.String(40))
-#
-#     access_token = db.Column(db.String(255), unique=True)
-#     refresh_token = db.Column(db.String(255), unique=True)
-#     expires = db.Column(db.DateTime)
-#     _scopes = db.Column(db.Text)
-#
-#     def delete(self):
-#         db.session.delete(self)
-#         db.session.commit()
-#         return self
-#
-#     @property
-#     def scopes(self):
-#         if self._scopes:
-#             return self._scopes.split()
-#         return []
-
-
 class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer,
@@ -277,8 +160,8 @@ prediction_weekly_sas = db.Table('prediction_weekly_sas',
                                  )
 
 
-class ProductSAS(db.Model):
-    __tablename__ = 'product_sas'
+class Product(db.Model):
+    __tablename__ = 'product'
     id = db.Column(db.Integer,
                    primary_key=True)
     name = db.Column(db.String(100),
@@ -286,16 +169,29 @@ class ProductSAS(db.Model):
     key = db.Column(db.String(20),
                     unique=True,
                     nullable=False)
-    category_id = db.Column(db.Integer,
-                            db.ForeignKey('category.id'))
-    category = db.relationship("Category",
-                               back_populates="products_sas")
     oneday_shelf_life = db.Column(db.Boolean,
                                   default=True)
     acceptable_waste_quantity = db.Column(db.Integer,
                                           default=1)
     acceptable_extra_quantity = db.Column(db.Integer,
                                           default=1)
+
+    def __repr__(self):
+        return f"Product(id:{self.id}, name:{self.name}," \
+               f" key:{self.key}, category_id:{self.category_id}, " \
+               f"prediction_daily:{self.prediction_daily}, " \
+               f"prediction_weekly:{self.prediction_daily})"
+
+
+class ProductSAS(Product):
+    __tablename__ = 'product_sas'
+    id = db.Column(db.Integer,
+                   db.ForeignKey('product.id'),
+                   primary_key=True)
+    category_id = db.Column(db.Integer,
+                            db.ForeignKey('category.id'))
+    category = db.relationship("Category",
+                               back_populates="products_sas")
     prediction_daily_id = db.Column(db.Integer,
                                     db.ForeignKey('prediction_daily.id'))
     prediction_daily = db.relationship("PredictionDaily",
@@ -305,32 +201,16 @@ class ProductSAS(db.Model):
     prediction_weekly = db.relationship("PredictionWeekly",
                                         back_populates="products_sas")
 
-    def __repr__(self):
-        return f"Product(id:{self.id}, name:{self.name}," \
-               f" key:{self.key}, category_id:{self.category_id}, " \
-               f"prediction_daily:{self.prediction_daily}, " \
-               f"prediction_weekly:{self.prediction_daily})"
 
-
-class ProductHQ(db.Model):
+class ProductHQ(Product):
     __tablename__ = 'product_hq'
     id = db.Column(db.Integer,
+                   db.ForeignKey('product.id'),
                    primary_key=True)
-    name = db.Column(db.String(100),
-                     nullable=False)
-    key = db.Column(db.String(20),
-                    unique=True,
-                    nullable=False)
     category_id = db.Column(db.Integer,
                             db.ForeignKey('category.id'))
     category = db.relationship("Category",
                                back_populates="products_hq")
-    oneday_shelf_life = db.Column(db.Boolean,
-                                  default=True)
-    acceptable_waste_quantity = db.Column(db.Integer,
-                                          default=1)
-    acceptable_extra_quantity = db.Column(db.Integer,
-                                          default=1)
     prediction_daily_id = db.Column(db.Integer,
                                     db.ForeignKey('prediction_daily.id'))
     prediction_daily = db.relationship("PredictionDaily",
@@ -340,30 +220,16 @@ class ProductHQ(db.Model):
     prediction_weekly = db.relationship("PredictionWeekly",
                                         back_populates="products_hq")
 
-    def __repr__(self):
-        return f"Product(id:{self.id}, name:{self.name}, " \
-               f"key:{self.key}, category_id:{self.category_id})"
 
-
-class ProductPSL(db.Model):
+class ProductPSL(Product):
     __tablename__ = 'product_psl'
     id = db.Column(db.Integer,
+                   db.ForeignKey('product.id'),
                    primary_key=True)
-    name = db.Column(db.String(100),
-                     nullable=False)
-    key = db.Column(db.String(20),
-                    unique=True,
-                    nullable=False)
     category_id = db.Column(db.Integer,
                             db.ForeignKey('category.id'))
     category = db.relationship("Category",
                                back_populates="products_psl")
-    oneday_shelf_life = db.Column(db.Boolean,
-                                  default=True)
-    acceptable_waste_quantity = db.Column(db.Integer,
-                                          default=1)
-    acceptable_extra_quantity = db.Column(db.Integer,
-                                          default=1)
     prediction_daily_id = db.Column(db.Integer,
                                     db.ForeignKey('prediction_daily.id'))
     prediction_daily = db.relationship("PredictionDaily",
@@ -373,30 +239,16 @@ class ProductPSL(db.Model):
     prediction_weekly = db.relationship("PredictionWeekly",
                                         back_populates="products_psl")
 
-    def __repr__(self):
-        return f"Product(id:{self.id}, name:{self.name}, " \
-               f"key:{self.key}, category_id:{self.category_id})"
 
-
-class ProductTCD(db.Model):
+class ProductTCD(Product):
     __tablename__ = 'product_tcd'
     id = db.Column(db.Integer,
+                   db.ForeignKey('product.id'),
                    primary_key=True)
-    name = db.Column(db.String(100),
-                     nullable=False)
-    key = db.Column(db.String(20),
-                    unique=True,
-                    nullable=False)
     category_id = db.Column(db.Integer,
                             db.ForeignKey('category.id'))
     category = db.relationship("Category",
                                back_populates="products_tcd")
-    oneday_shelf_life = db.Column(db.Boolean,
-                                  default=True)
-    acceptable_waste_quantity = db.Column(db.Integer,
-                                          default=1)
-    acceptable_extra_quantity = db.Column(db.Integer,
-                                          default=1)
     prediction_daily_id = db.Column(db.Integer,
                                     db.ForeignKey('prediction_daily.id'))
     prediction_daily = db.relationship("PredictionDaily",
@@ -406,30 +258,16 @@ class ProductTCD(db.Model):
     prediction_weekly = db.relationship("PredictionWeekly",
                                         back_populates="products_tcd")
 
-    def __repr__(self):
-        return f"Product(id:{self.id}, name:{self.name}, " \
-               f"key:{self.key}, category_id:{self.category_id})"
 
-
-class ProductISFC(db.Model):
+class ProductISFC(Product):
     __tablename__ = 'product_isfc'
     id = db.Column(db.Integer,
+                   db.ForeignKey('product.id'),
                    primary_key=True)
-    name = db.Column(db.String(100),
-                     nullable=False)
-    key = db.Column(db.String(20),
-                    unique=True,
-                    nullable=False)
     category_id = db.Column(db.Integer,
                             db.ForeignKey('category.id'))
     category = db.relationship("Category",
                                back_populates="products_isfc")
-    oneday_shelf_life = db.Column(db.Boolean,
-                                  default=True)
-    acceptable_waste_quantity = db.Column(db.Integer,
-                                          default=1)
-    acceptable_extra_quantity = db.Column(db.Integer,
-                                          default=1)
     prediction_daily_id = db.Column(db.Integer,
                                     db.ForeignKey('prediction_daily.id'))
     prediction_daily = db.relationship("PredictionDaily",
@@ -438,10 +276,6 @@ class ProductISFC(db.Model):
                                      db.ForeignKey('prediction_weekly.id'))
     prediction_weekly = db.relationship("PredictionWeekly",
                                         back_populates="products_isfc")
-
-    def __repr__(self):
-        return f"Product(id:{self.id}, name:{self.name}, " \
-               f"key:{self.key}, category_id:{self.category_id})"
 
 
 class PredictionDaily(db.Model):

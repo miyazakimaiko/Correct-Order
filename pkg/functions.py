@@ -10,6 +10,18 @@ def get_last_7days():
     return lastweek
 
 
+def get_dynamic_dates_from(start, end):
+    # If you want to get date 30 days ago --> start = -30
+    # If you want to get date until today --> 0, yesterday --> -1, two days ago --> -2.. so on
+    e = end + 2
+    lst = []
+
+    for i in range(start, e, 1):
+        d = datetime.date.today() + datetime.timedelta(days=i)
+        lst.append(d.strftime("%m/%d/%Y 00:00:00"))
+    return lst
+
+
 def get_recent_week_nums():
     weeks = []
     for i in range(1, 36, 7):
@@ -50,7 +62,7 @@ def json_get_fooditem_keys(obj):
     def extract(obj, arr, itemname, itemkey, itemlabel, category):
         """Recursively search for values of key in JSON tree."""
 
-        def getLabel(obj):
+        def get_label(obj):
             """This labels identify the difference of items which hold same item name"""
             l = 'no-label'
             for item in obj:
@@ -71,7 +83,7 @@ def json_get_fooditem_keys(obj):
                 elif k == 'productVariants':
                     extract(v, arr, itemname, itemkey, itemlabel, category)
                 elif k == 'modifierOptions':
-                    itemlabel = getLabel(v)
+                    itemlabel = get_label(v)
                 elif k == 'skuNumber':
                     itemkey = v
                 elif k == 'name':
@@ -231,21 +243,32 @@ def merge_data(salesdata, itemdata):
                             for key in subkeys:
                                 if key == soldkey:
                                     arr[date][soldcategory][soldname]['sold'] += soldnum
-                                    # arr[date][soldcategory][soldname][parentkey] += soldnum
 
-        # def addUpSameItems(array):
-        #     name = None
-        #     total = 0
-        #     for date, dailysale in array.items():
-        #         for category, solditems in dailysale.items():
-        #             for itemname, itemkeys in solditems.items():
-        #                 for itemkey, soldnum in itemkeys.items():
-        #                     if name is None:
-        #                         name = itemkey
-        #                     total += soldnum
-        #                 array[date][category][itemname][name] = total
-        #                 total = 0
-        #                 name = None
-        #
-        # addUpSameItems(arr)
     return arr
+
+
+def modify_into_training_data(data):
+    lst = []
+    for dt, soldproducts in data.items():
+        date = dt
+        category = None
+        name = None
+        key = None
+        sales = None
+        for ctg, products in soldproducts.items():
+            category = ctg
+            for pdname, pdinfo in products.items():
+                name = pdname
+                for k, v in pdinfo.items():
+                    if k == "sold":
+                        sales = v
+                    elif isinstance(v, list):
+                        key = k
+                if date and category and name and key and sales:
+                    lst.append({"name": name,
+                                "key": key,
+                                "date": date,
+                                "category": category,
+                                "sales": sales})
+
+    return lst

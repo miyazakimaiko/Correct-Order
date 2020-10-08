@@ -78,3 +78,7 @@ input[type=number] {
     text-align: inherit !important;
     text-transform: none !important;
 }
+
+.sidenav li a i {
+    font-size: 0.9rem !important;
+}

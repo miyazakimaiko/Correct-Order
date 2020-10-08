@@ -6,12 +6,30 @@
         <h1 class="logo-wrapper"><a class="brand-logo darken-1" href="index"><img class="hide-on-med-and-down" src="{{ url_for('static',filename='images/logo/materialize-logo-color.png') }}" alt="materialize logo"/><img class="show-on-medium-and-down hide-on-med-and-up" src="{{ url_for('static',filename='images/logo/materialize-logo.png') }}" alt="materialize logo"/><span class="logo-text hide-on-med-and-down">CorrectOrder</span></a><a class="navbar-toggler" href="#"><i class="material-icons">radio_button_checked</i></a></h1>
       </div>
       <ul class="sidenav sidenav-collapsible leftside-navigation collapsible sidenav-fixed menu-shadow" id="slide-out" data-menu="menu-navigation" data-collapsible="menu-accordion">
-        <li class="navigation-header"><a class="navigation-header-text">Date:</a><i class="navigation-header-icon material-icons">more_horiz</i>
+          <div class="navigation-body">
+            <ul class="category-list display-grid tabs" data-collapsible="accordion">
+                <li class="navigation-header"><a class="navigation-header-text">Daily Sales Forecast</a><i class="navigation-header-icon material-icons">more_horiz</i>
+                </li>
+            {% for i in range(1, dates|length) %}
+                {% if i==1 %}
+                <li class="tab bold text-normalize"><a class="waves-effect waves-cyan" href="#day{{ i }}">
+                    <i class="material-icons">radio_button_unchecked</i>
+                    <span class="menu-title"> ({{ dates[i].day }}){{ dates[i].date }}(Tomorrow)</span></a>
+                </li>
+                {% else %}
+                <li class="tab text-normalize bold"><a class="waves-effect waves-cyan " href="#day{{ i }}"><i class="material-icons">radio_button_unchecked</i><span class="menu-title">({{ dates[i].day }}){{ dates[i].date }}</span></a>
+                </li>
+                {% endif %}
+            {% endfor %}
+                <li class="navigation-header"><a class="navigation-header-text">Weekly Sales Forecast</a><i class="navigation-header-icon material-icons">more_horiz</i>
+                </li>
+             {% for i in range(weeks|length) %}
+                <li class="tab bold text-normalize"><a class="waves-effect waves-cyan " href="#week{{ i }}"><i class="material-icons">radio_button_unchecked</i><span class="menu-title"> Week {{ weeks[i] }}</span></a>
+                </li>
+            {% endfor %}
+             </ul>
+          </div>
         </li>
-        {% for i in range(dates|length) %}
-        <li class="bold"><a class="waves-effect waves-cyan" href="day{{ i }}"><span class="menu-title">({{ dates[i].day.capitalize() }}){{ dates[i].date }}</span></a>
-        </li>
-        {% endfor %}
       </ul>
       <div class="navigation-background"></div><a class="sidenav-trigger btn-sidenav-toggle btn-floating btn-medium waves-effect waves-light hide-on-large-only" href="#" data-target="slide-out"><i class="material-icons">menu</i></a>
     </aside>

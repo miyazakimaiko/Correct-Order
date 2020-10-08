@@ -1,10 +1,7 @@
-import os
-import secrets
-from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, session
 from functools import wraps
 from .forms import UserRegistrationForm, BranchRegistrationForm, LoginForm, UpdateAccountForm
-from . import app, db, bcrypt, login_manager, oauth
+from . import app, db, bcrypt, login_manager
 from .models import User, Role, Branch, Category, ProductSAS, ProductHQ, ProductISFC, ProductPSL, ProductTCD
 from .talech_keys import grant_type, client_id_1, client_id_2, client_secret_1, client_secret_2, \
     client_version, token_url, refresh_token_1, refresh_token_2, ID_HQ, ID_IFSC, ID_PSL, ID_SAS, ID_TCD
@@ -14,14 +11,12 @@ from wtforms.form import BaseForm
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, BooleanField, IntegerField, FormField
 import datetime
-from authlib.integrations.requests_client import OAuth2Session
 from flask.json import jsonify
 import json
-from authlib.oauth2.rfc7523 import ClientSecretJWT
-import oauth2
 import requests
 import time
 import pprint
+import pandas as pd
 
 
 def login_required(f):
@@ -50,16 +45,14 @@ for i in range(8):
     dates.append(date)
 
 
-weeks = []
+from .functions import get_recent_week_nums
 
-for i in range(1, 36, 7):
-    w = datetime.date.today() + datetime.timedelta(days=i)
-    week = w.strftime("%V")
-    weeks.append(week)
+
+weeks = get_recent_week_nums()
 
 
 @app.route("/user-register", methods=['GET', 'POST'])
-def userRegister():
+def user_register():
     form = UserRegistrationForm()
     if form.validate_on_submit():
         staff_branch = Branch.query.filter_by(name=form.branch.data).first()
@@ -73,12 +66,12 @@ def userRegister():
         db.session.add(user)
         db.session.commit()
         flash(f'Account created for {form.name.data}! Now you can login.', 'success')
-        return redirect(url_for('userLogin'))
+        return redirect(url_for('user_login'))
     return render_template('user-register.html', form=form)
 
 
 @app.route("/branch-register", methods=['GET', 'POST'])
-def branchRegister():
+def branch_register():
     form = BranchRegistrationForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
@@ -93,14 +86,14 @@ def branchRegister():
         db.session.add(branch)
         db.session.commit()
         flash(f'Account created for {form.name.data}! Now you can login.', 'success')
-        return redirect(url_for('userLogin'))
+        return redirect(url_for('user_login'))
     return render_template('branch-register.html',
                            form=form)
 
 
 @app.route("/", methods=['GET', 'POST'])
 @app.route("/user-login", methods=['GET', 'POST'])
-def userLogin():
+def user_login():
     form = LoginForm()
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -118,9 +111,9 @@ def userLogin():
 
 
 @app.route("/user-logout")
-def userLogout():
+def user_logout():
     logout_user()
-    return redirect(url_for('userLogin'))
+    return redirect(url_for('user_login'))
 
 
 @app.route("/account")
@@ -132,23 +125,12 @@ def account():
                            image_file=image_file)
 
 
-def save_picture(form_picture):
-    random_hex = secrets.token_hex(8)
-    _, f_ext = os.path.splitext(form_picture.filename)
-    picture_fn = random_hex + f_ext
-    picture_path = os.path.join(app.root_path, 'static/images/avatar', picture_fn)
-
-    output_size = (125, 125)
-    i = Image.open(form_picture)
-    i.thumbnail(output_size)
-    i.save(picture_path)
-
-    return picture_fn
+from .functions import save_picture
 
 
 @app.route("/account-edit", methods=['GET', 'POST'])
 @login_required
-def accountEdit():
+def account_edit():
     form = UpdateAccountForm()
     if form.validate_on_submit():
         if form.picture.data:
@@ -208,7 +190,7 @@ def accountEdit():
 
 @app.route("/products-edit", methods=['GET', 'POST'])
 @roles_required('Admin')
-def productEdit():
+def product_edit():
     def form_form_fields(fields):
         def create_form(prefix='', **kwargs):
             form = BaseForm(fields, prefix=prefix)
@@ -293,7 +275,7 @@ def index():
                              json=data)
         resp_json = resp.json()
         session['oauth_token'] = resp_json['access_token']
-        return redirect(url_for('.allitems'))
+        return redirect(url_for('.profile'))
         # return jsonify(resp.json())
     #     current_branch_name = current_user.branches[0].name
     #     if current_branch_name == 'SAS':
@@ -323,176 +305,55 @@ def index():
     #                        image_file=image_file)
 
 
-# def addup_same_items(obj, items):
-#
-
-# def json_extract_setmenu(obj):
-#     arr = []
-#
-#     def extract(obj, arr):
-#         """Recursively search for values of key in JSON tree."""
-#         if isinstance(obj, dict):
-#             for k, v in obj.items():
-#                 if k == 'name' and v == 'Soup & Sandwich':
-#                     arr.append(obj)
-#                 elif k == 'items':
-#                     extract(v, arr)
-#                 elif k == 'productVariants':
-#                     extract(v, arr)
-#
-#         elif isinstance(obj, list):
-#             for item in obj:
-#                 extract(item, arr)
-#         return arr
-#
-#     values = extract(obj, arr)
-#     return values
+from .functions import json_get_sales_count, json_get_fooditem_keys, \
+    merge_data, get_dynamic_dates_from, modify_into_training_data
 
 
-def json_extract_itemkeys(obj):
-    """Recursively fetch values from nested JSON."""
-    arr = {}
-    bundleditems = {}
-    itemname = 'No name'
-    itemkey = 'no-key'
-    itemlabel = 'no-label'
-    category = 'no-category'
+@app.route("/profile", methods=["GET", "POST"])
+def profile():
+    def get_summary_report(token, startdate, enddate):
+        arr = {
+            'searchCriteria': {
+                'startDate': startdate,
+                'endDate': enddate,
+                'includedReports': [102]
+            }
+        }
+        result = requests.post(url='https://mapi-eu.talech.com/reports/receiptssummaryreport',
+                               json=arr,
+                               headers=token)
+        items = result.json()
+        salesdata = json_get_sales_count(items)
+        return salesdata
 
-    def extractLabel(obj):
-        l = 'no-label'
-        for item in obj:
-            for k, v in item.items():
-                if k == 'label' and v != 'Tall' and v != 'Reg' \
-                        and v != 'To Go' and v != 'Sit In' \
-                        and v != 'Heated' and v != 'Not Heated':
-                    l = v
-        return l
-
-    def extract(obj, arr, itemname, itemkey, itemlabel, category):
-        """Recursively search for values of key in JSON tree."""
-        if isinstance(obj, dict):
-            for k, v in obj.items():
-                if k == 'items':
-                    extract(v, arr, itemname, itemkey, itemlabel, category)
-                elif k == 'productVariants':
-                    extract(v, arr, itemname, itemkey, itemlabel, category)
-                elif k == 'modifierOptions':
-                    # this get null
-                    itemlabel = extractLabel(v)
-                elif k == 'skuNumber':
-                    itemkey = v
-                elif k == 'name':
-                    itemname = v
-                elif k == 'categoryType':
-                    category = v
-                arr[itemkey] = {'name': itemname, 'label': itemlabel, 'category': category}
-
-        elif isinstance(obj, list):
-            for item in obj:
-                extract(item, arr, itemname, itemkey, itemlabel, category)
-        return arr
-
-    def bundle_sameitems(obj, bundleditems):
-        lunchitemkey = None
-        lunchitemname = None
-        for key, val in obj.items():
-            for k, v in val.items():
-                if k == 'category' and v == 'LUNCH':
-                    print(val)
-                    lunchitemkey = key
-                if k == 'name':
-                    lunchitemname = v
-
-            if lunchitemkey != None:
-                try:
-                    bundleditems[lunchitemname].append(lunchitemkey)
-                except:
-                    bundleditems[lunchitemname] = [lunchitemkey]
-                lunchitemkey = None
-                lunchitemname = None
-
-        return bundleditems
-
-    values = extract(obj, arr, itemname, itemkey, itemlabel, category)
-    bundled = bundle_sameitems(values, bundleditems)
-    return bundled
-
-
-@app.route("/allitems", methods=["GET", "POST"])
-def allitems():
+    days = get_dynamic_dates_from(-30, -2)
     token = {
         'securityToken': session['oauth_token'],
         'X-POS-MerchantId': ID_SAS
     }
-    data = {
+
+    dailysales = {}
+    for i in range(1, len(days)):
+        salesdata = get_summary_report(token, days[i-1], days[i])
+        dailysales[days[i-1]] = salesdata
+
+    itemsearchdata = {
         'searchCriteria': {
             'offset': 0,
             'inventoryOnly': False
         }
     }
-    result = requests.post(url='https://mapi-eu.talech.com/managemenu/menuitem/allmenuitems',
-                           json=data,
-                           headers=token)
-    items = result.json()
-    result = json_extract_itemkeys(items)
-    # result = json_extract_setmenu(items)
-    return jsonify(result)
+    url = 'https://mapi-eu.talech.com/managemenu/menuitem/allmenuitems'
+    menuresult = requests.post(url=url,
+                               json=itemsearchdata,
+                               headers=token)
+    items = menuresult.json()
+    itemkeys = json_get_fooditem_keys(items)
+    merged = merge_data(dailysales, itemkeys)
+    modify = modify_into_training_data(merged)
 
-
-def json_extract(obj, name, key, value):
-    """Recursively fetch values from nested JSON."""
-    arr = {}
-    itemname = 'No name'
-    itemkey = 'no-key'
-    itemvalue = 0
-
-    def extract(obj, arr, itemname, itemkey, itemvalue, name, key, value):
-        """Recursively search for values of key in JSON tree."""
-        if isinstance(obj, dict):
-            for k, v in obj.items():
-                if isinstance(v, (dict, list)):
-                    extract(v, arr, itemname, itemkey, itemvalue, name, key, value)
-                elif k == name:
-                    itemname = v
-                elif k == key:
-                    itemkey = v
-                elif k == value:
-                    itemvalue = v
-                arr[itemname] = {key: itemkey, value: itemvalue}
-
-        elif isinstance(obj, list):
-            for item in obj:
-                extract(item, arr, itemname, itemkey, itemvalue, name, key, value)
-        return arr
-
-    values = extract(obj, arr, itemname, itemkey, itemvalue, name, key, value)
-    return values
-
-
-@app.route("/profile", methods=["GET", "POST"])
-def profile():
-    token = {
-        'securityToken': session['oauth_token'],
-        'X-POS-MerchantId': ID_SAS
-    }
-    data = {
-        'searchCriteria': {
-            'startDate': "09/01/2020 00:00:00",
-            'endDate': "09/02/2020 00:00:00",
-            'includeShiftsData': True,
-            'includedReports': [102]
-        }
-    }
-    result = requests.post(url='https://mapi-eu.talech.com/reports/receiptssummaryreport',
-                           json=data,
-                           headers=token)
-    items = result.json()
-    name = 'productName'
-    key = 'item'
-    value = 'soldQuantity'
-    salesdata = json_extract(items, name, key, value)
-    # print(salesdata['Ham & Cheese Toastie + To Go, Heated']['item'])
-    return jsonify(salesdata)
+    return jsonify(modify)
+    # return redirect(url_for('.profile', salesdata=merged))
 
 
 @app.route("/page-faq")
