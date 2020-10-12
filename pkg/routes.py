@@ -12,11 +12,10 @@ from flask_wtf import FlaskForm
 from wtforms import SubmitField, BooleanField, IntegerField, FormField
 import datetime
 from flask.json import jsonify
-import json
 import requests
-import time
-import pprint
-import pandas as pd
+import os
+import secrets
+from PIL import Image
 
 
 def login_required(f):
@@ -125,12 +124,22 @@ def account():
                            image_file=image_file)
 
 
-from .functions import save_picture
-
-
 @app.route("/account-edit", methods=['GET', 'POST'])
 @login_required
 def account_edit():
+    def save_picture(form_picture):
+        random_hex = secrets.token_hex(8)
+        _, f_ext = os.path.splitext(form_picture.filename)
+        picture_fn = random_hex + f_ext
+        picture_path = os.path.join(app.root_path, 'static/images/avatar', picture_fn)
+
+        output_size = (125, 125)
+        i = Image.open(form_picture)
+        i.thumbnail(output_size)
+        i.save(picture_path)
+
+        return picture_fn
+
     form = UpdateAccountForm()
     if form.validate_on_submit():
         if form.picture.data:

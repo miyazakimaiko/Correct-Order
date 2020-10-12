@@ -10,15 +10,16 @@ def get_last_7days():
     return lastweek
 
 
-def get_dynamic_dates_from(start, end):
+def get_dynamic_dates_from(startday, endday):
     # If you want to get date 30 days ago --> start = -30
     # If you want to get date until today --> 0, yesterday --> -1, two days ago --> -2.. so on
-    e = end + 2
+    end = endday + 2
     lst = []
 
-    for i in range(start, e, 1):
-        d = datetime.date.today() + datetime.timedelta(days=i)
-        lst.append(d.strftime("%m/%d/%Y 00:00:00"))
+    for i in range(startday, end, 1):
+        for h in range(7, 19):
+            d = datetime.date.today() + datetime.timedelta(days=i)
+            lst.append(d.strftime("%m/%d/%Y {}:00:00").format(h))
     return lst
 
 
@@ -29,26 +30,6 @@ def get_recent_week_nums():
         week = w.strftime("%V")
         weeks.append(week)
     return weeks
-
-
-import os
-import secrets
-from PIL import Image
-from . import app
-
-
-def save_picture(form_picture):
-    random_hex = secrets.token_hex(8)
-    _, f_ext = os.path.splitext(form_picture.filename)
-    picture_fn = random_hex + f_ext
-    picture_path = os.path.join(app.root_path, 'static/images/avatar', picture_fn)
-
-    output_size = (125, 125)
-    i = Image.open(form_picture)
-    i.thumbnail(output_size)
-    i.save(picture_path)
-
-    return picture_fn
 
 
 def json_get_fooditem_keys(obj):
