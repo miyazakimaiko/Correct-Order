@@ -1,16 +1,33 @@
 import datetime
+import requests
+from dateutil.relativedelta import relativedelta
+import calendar
+import pandas as pd
 
 
-def get_last_7days():
-    lastweek = []
+def get_dates(num):
+    lst = []
 
-    for i in range(-7, 1, 1):
+    for i in range(num, 1, 1):
         d = datetime.date.today() + datetime.timedelta(days=i)
-        lastweek.append(d.strftime("%m/%d/%Y 00:00:00"))
-    return lastweek
+        lst.append(d.strftime("%m/%d/%Y 00:00:00"))
+    return lst
 
 
-def get_dynamic_dates_from(startday, endday):
+def get_months_dates(startmonth, length, month, year):
+    # This returns list of dates of specified lengths of months.
+    target = datetime.date(year, month, 1)
+    lst = []
+
+    for h in range(startmonth, startmonth + length, 1):
+        current = target + relativedelta(months=h)
+        for i in range(1, calendar.monthlen(current.year, current.month) + 1):
+            d = datetime.date(current.year, current.month, i)
+            lst.append(d.strftime("%m/%d/%Y 00:00:00"))
+    return lst
+
+
+def get_dates_from_to(startday, endday):
     # If you want to get date 30 days ago --> start = -30
     # If you want to get date until today --> 0, yesterday --> -1, two days ago --> -2.. so on
     end = endday + 2
@@ -30,6 +47,36 @@ def get_recent_week_nums():
         week = w.strftime("%V")
         weeks.append(week)
     return weeks
+
+
+def get_accesstoken(client_id, client_secret, refresh_token, client_version, token_url):
+    data = {
+        'grant_type': 'refresh_token',
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'refresh_token': refresh_token,
+        'client_version': client_version
+    }
+    resp = requests.post(url=token_url,
+                         json=data)
+    resp_json = resp.json()
+    return resp_json['access_token']
+
+
+def get_summary_report(token, startdate, enddate):
+    arr = {
+        'searchCriteria': {
+            'startDate': startdate,
+            'endDate': enddate,
+            'includedReports': [102]
+        }
+    }
+    result = requests.post(url='https://mapi-eu.talech.com/reports/receiptssummaryreport',
+                           json=arr,
+                           headers=token)
+    items = result.json()
+    salesdata = json_get_sales_count(items)
+    return salesdata
 
 
 def json_get_fooditem_keys(obj):
@@ -231,7 +278,7 @@ def merge_data(salesdata, itemdata):
 def modify_into_training_data(data):
     lst = []
     for dt, soldproducts in data.items():
-        date = dt
+        date = pd.to_datetime(dt).strftime('%m/%d/%Y')
         category = None
         name = None
         key = None

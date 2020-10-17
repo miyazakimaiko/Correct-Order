@@ -315,7 +315,7 @@ def index():
 
 
 from .functions import json_get_sales_count, json_get_fooditem_keys, \
-    merge_data, get_dynamic_dates_from, modify_into_training_data
+    merge_data, get_dates, modify_into_training_data
 
 
 @app.route("/profile", methods=["GET", "POST"])
@@ -335,7 +335,7 @@ def profile():
         salesdata = json_get_sales_count(items)
         return salesdata
 
-    days = get_dynamic_dates_from(-30, -2)
+    days = get_dates(-7)
     token = {
         'securityToken': session['oauth_token'],
         'X-POS-MerchantId': ID_SAS
