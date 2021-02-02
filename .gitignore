@@ -25,4 +25,7 @@ pkg/talech_keys.py
 pkg/data_analysis/data
 pkg/data_analysis_02/data
 pkg/data_analysis_02/keys.py
+<<<<<<< HEAD
 pkg/data_analysis_02/secret.py
+=======
+>>>>>>> 3a912c4 (removed file)
