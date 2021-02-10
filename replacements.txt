@@ -1,0 +1,14 @@
+refresh_token
+4.5.0
+karl@coffeeangel.com
+JSKI28YL
+9921710/W5opmJorZWSZo3WROIre18sP
+myzkmik19922@gmail.com
+7Ac7YPNgcsgzxhiE
+36446748/QX35Y7TCypuuZtgcAvWPAbUN
+https://mapi-eu.talech.com/o/oauth2/token
+80687701
+80338657
+80899792
+80256585
+80611417
